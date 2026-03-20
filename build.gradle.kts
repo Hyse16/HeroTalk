@@ -13,7 +13,7 @@ java {
 
 configurations {
     compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
+        extendsFrom(configurations["annotationProcessor"])
     }
 }
 
@@ -67,10 +67,10 @@ sourceSets {
 }
 
 tasks.withType<JavaCompile> {
-    options.generatedSourceOutputDirectory = file(querydslDir)
+    options.generatedSourceOutputDirectory.set(file(querydslDir))
 }
 
-tasks.named("clean") {
+tasks.named<Delete>("clean") {
     doLast {
         file(querydslDir).deleteRecursively()
     }
