@@ -67,3 +67,6 @@ src/main/generated/
 
 # Spring Boot
 /src/main/resources/application-local.yml
+
+# Git worktrees
+.worktrees/
