@@ -120,8 +120,6 @@ export default function LoginPage() {
     const refresh = params.get('refresh')
     const isNew = params.get('isNew') === 'true'
     if (token) {
-      localStorage.setItem('accessToken', token)
-      if (refresh) localStorage.setItem('refreshToken', refresh)
       login(null, token, refresh)
       navigate(isNew ? '/character/create' : '/game', { replace: true })
     }
@@ -139,12 +137,14 @@ export default function LoginPage() {
     try {
       if (mode === 'login') {
         const { data } = await api.post('/auth/login', { email: form.email, password: form.password })
-        login(data.data.user, data.data.accessToken, data.data.refreshToken)
-        navigate(data.data.newUser ? '/character/create' : '/game', { replace: true })
+        const { accessToken, refreshToken, userId, nickname, newUser } = data.data
+        login({ userId, nickname }, accessToken, refreshToken)
+        navigate(newUser ? '/character/create' : '/game', { replace: true })
       } else {
-        await api.post('/auth/signup', form)
-        setMode('login')
-        setForm({ email: form.email, password: '', nickname: '' })
+        const { data } = await api.post('/auth/signup', form)
+        const { accessToken, refreshToken, userId, nickname } = data.data
+        login({ userId, nickname }, accessToken, refreshToken)
+        navigate('/character/create', { replace: true })
       }
     } catch (err) {
       setError(err.response?.data?.message || (mode === 'login' ? '이메일 또는 비밀번호를 확인해주세요.' : '회원가입에 실패했습니다.'))
