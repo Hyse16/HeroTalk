@@ -1,4 +1,5 @@
 import axios from 'axios'
+import useAuthStore from '@/store/authStore'
 
 const api = axios.create({
   baseURL: '/api',
@@ -25,11 +26,12 @@ api.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken')
         const { data } = await axios.post('/api/auth/refresh', { refreshToken })
-        localStorage.setItem('accessToken', data.accessToken)
-        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`
+        const newToken = data.data.accessToken
+        useAuthStore.getState().setAccessToken(newToken)
+        originalRequest.headers.Authorization = `Bearer ${newToken}`
         return api(originalRequest)
       } catch {
-        localStorage.clear()
+        useAuthStore.getState().logout()
         window.location.href = '/login'
       }
     }
