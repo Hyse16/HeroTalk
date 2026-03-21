@@ -7,13 +7,19 @@ const useAuthStore = create((set) => ({
 
   login: (user, accessToken, refreshToken) => {
     localStorage.setItem('accessToken', accessToken)
-    localStorage.setItem('refreshToken', refreshToken)
+    if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
     set({ user, accessToken, isAuthenticated: true })
   },
 
   logout: () => {
-    localStorage.clear()
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
     set({ user: null, accessToken: null, isAuthenticated: false })
+  },
+
+  setAccessToken: (accessToken) => {
+    localStorage.setItem('accessToken', accessToken)
+    set({ accessToken })
   },
 
   setUser: (user) => set({ user }),

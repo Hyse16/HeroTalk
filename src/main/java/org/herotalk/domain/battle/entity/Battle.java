@@ -49,7 +49,39 @@ public class Battle {
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
 
+    /** 배틀 진행 중 몬스터 현재 HP (턴마다 감소) */
+    @Column(name = "current_monster_hp")
+    private Integer currentMonsterHp;
+
     public enum BattleResult {
         WIN, LOSE, FLEE
+    }
+
+    // ── 도메인 변이 메서드 ──
+
+    /** 배틀 시작 시 몬스터 HP 초기화 */
+    public void initMonsterHp(int hp) {
+        this.currentMonsterHp = hp;
+    }
+
+    /** 몬스터에게 데미지 적용 → 남은 HP 반환 */
+    public int damageMonster(int damage) {
+        this.currentMonsterHp = Math.max(0, this.currentMonsterHp - damage);
+        return this.currentMonsterHp;
+    }
+
+    /** 배틀 도망 처리 */
+    public void flee() {
+        this.result   = BattleResult.FLEE;
+        this.endedAt  = LocalDateTime.now();
+    }
+
+    /** 배틀 종료 처리 (승/패) */
+    public void finish(BattleResult result, int totalTurns, int expGained, int goldGained) {
+        this.result     = result;
+        this.totalTurns = totalTurns;
+        this.expGained  = expGained;
+        this.goldGained = goldGained;
+        this.endedAt    = LocalDateTime.now();
     }
 }

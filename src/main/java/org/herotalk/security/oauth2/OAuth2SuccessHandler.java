@@ -45,9 +45,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         boolean hasCharacter = characterRepository.findByUserId(userId).isPresent();
 
-        // 신규/기존 모두 token + refresh + isNew 파라미터 전달
+        // /login 으로 리디렉션 → LoginPage에서 토큰 추출 후 이동
         String redirectUrl = UriComponentsBuilder
-                .fromUriString(frontendUrl + (hasCharacter ? "/game" : "/character/create"))
+                .fromUriString(frontendUrl + "/login")
                 .queryParam("token",   accessToken)
                 .queryParam("refresh", refreshToken)
                 .queryParam("isNew",   !hasCharacter)

@@ -64,6 +64,9 @@ public class Character extends BaseTimeEntity {
         WARRIOR, MAGE, KNIGHT, RANGER
     }
 
+    // ── 도메인 변이 메서드 ──
+
+    /** 경험치 추가 + 레벨업 처리 */
     public void addExp(long amount) {
         this.exp += amount;
         while (this.exp >= this.expToNext) {
@@ -72,5 +75,27 @@ public class Character extends BaseTimeEntity {
             this.statPoints += 3;
             this.expToNext = (long) this.level * 200;
         }
+    }
+
+    /** 데미지 적용 → 남은 HP 반환 (최솟값 0) */
+    public int applyDamage(int damage) {
+        this.hp = Math.max(0, this.hp - damage);
+        return this.hp;
+    }
+
+    /** 배틀 후 HP 회복 (마을 귀환 시 최대 HP로) */
+    public void restoreHp() {
+        this.hp = this.maxHp;
+    }
+
+    /** 골드 추가 */
+    public void addGold(int amount) {
+        this.gold += amount;
+    }
+
+    /** 골드 차감 (부족 시 예외) */
+    public void spendGold(int amount) {
+        if (this.gold < amount) throw new IllegalArgumentException("골드가 부족합니다.");
+        this.gold -= amount;
     }
 }
