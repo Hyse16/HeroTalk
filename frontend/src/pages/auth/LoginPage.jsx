@@ -140,7 +140,7 @@ export default function LoginPage() {
       if (mode === 'login') {
         const { data } = await api.post('/auth/login', { email: form.email, password: form.password })
         login(data.data.user, data.data.accessToken, data.data.refreshToken)
-        navigate(data.data.isNewUser ? '/character/create' : '/game', { replace: true })
+        navigate(data.data.newUser ? '/character/create' : '/game', { replace: true })
       } else {
         await api.post('/auth/signup', form)
         setMode('login')
@@ -154,7 +154,7 @@ export default function LoginPage() {
   }
 
   const handleOAuth = (provider) => {
-    window.location.href = `/api/oauth2/authorization/${provider}`
+    window.location.href = `/oauth2/authorization/${provider}`
   }
 
   const switchMode = (next) => { setMode(next); setError(''); setForm({ email: '', password: '', nickname: '' }) }
