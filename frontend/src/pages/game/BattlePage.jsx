@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { processTurn } from '@/api/battleApi'
 import useSpeechRecognition from '@/hooks/useSpeechRecognition'
@@ -51,6 +51,11 @@ export default function BattlePage() {
 
   const { transcript, isListening, startListening, stopListening } = useSpeechRecognition()
 
+  // Ref to always capture latest transcript value — avoids stale closure
+  // when isListening transitions to false before transcript state updates
+  const transcriptRef = useRef(transcript)
+  useEffect(() => { transcriptRef.current = transcript }, [transcript])
+
   useEffect(() => {
     if (!battle || !monster) navigate('/game', { replace: true })
   }, [battle, monster, navigate])
@@ -100,13 +105,14 @@ export default function BattlePage() {
     }
   }, [battle])
 
-  // Auto-process turn when STT recording stops and transcript is available
+  // Auto-process turn when STT recording stops
+  // Uses ref to get latest transcript and avoid stale state race
   useEffect(() => {
     if (awaitingSTT && !isListening) {
-      const score = calcStubScore(transcript)
+      const score = calcStubScore(transcriptRef.current)
       handleTurn('ATTACK', score)
     }
-  }, [awaitingSTT, isListening, transcript, handleTurn])
+  }, [awaitingSTT, isListening, handleTurn])
 
   const handleAttack = () => {
     if (processing || awaitingSTT) return

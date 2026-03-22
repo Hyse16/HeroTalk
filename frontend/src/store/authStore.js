@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import useCharacterStore from './characterStore'
 
 const useAuthStore = create((set) => ({
   user: null,
@@ -14,6 +15,7 @@ const useAuthStore = create((set) => ({
   logout: () => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
+    useCharacterStore.getState().clearCharacter()
     set({ user: null, accessToken: null, isAuthenticated: false })
   },
 

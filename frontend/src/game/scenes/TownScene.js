@@ -124,18 +124,16 @@ export default class TownScene extends Phaser.Scene {
     )
     const nearGate = distToGate < 80
 
-    if (nearGate && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
-      EventBus.emit('dungeon-enter')
-    }
-
-    // NPC proximity check
+    // NPC proximity — calculated before Enter check so both can share else if
     const distToNpc = Phaser.Math.Distance.Between(
       this.player.x, this.player.y,
       this.npcZone.x, this.npcZone.y
     )
     const nearNpc = distToNpc < 70
 
-    if (nearNpc && Phaser.Input.Keyboard.JustDown(this.enterKey) && !this.npcDialogShown) {
+    if (nearGate && Phaser.Input.Keyboard.JustDown(this.enterKey)) {
+      EventBus.emit('dungeon-enter')
+    } else if (nearNpc && Phaser.Input.Keyboard.JustDown(this.enterKey) && !this.npcDialogShown) {
       this.npcDialogShown = true
       const dialog = this.add.text(this.npcZone.x, this.npcZone.y - 100,
         '훈련사: 던전에 입장해 토익스피킹\n실력을 키워보세요! (Enter)',

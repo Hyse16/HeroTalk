@@ -25,24 +25,24 @@ function GamePage() {
       })
   }, [setCharacter, navigate])
 
-  // Initialize Phaser game
-  useEffect(() => {
-    if (gameRef.current) return
-    gameRef.current = new Phaser.Game({
-      ...GameConfig,
-      parent: containerRef.current,
-    })
-    return () => {
-      gameRef.current?.destroy(true)
-      gameRef.current = null
-    }
-  }, [])
-
-  // EventBus: listen for dungeon-enter event from TownScene
+  // Initialize Phaser game + register EventBus listener in same effect
+  // to avoid race condition where TownScene emits before listener is registered
   useEffect(() => {
     const handler = () => setShowDungeonModal(true)
     EventBus.on('dungeon-enter', handler)
-    return () => EventBus.off('dungeon-enter', handler)
+
+    if (!gameRef.current) {
+      gameRef.current = new Phaser.Game({
+        ...GameConfig,
+        parent: containerRef.current,
+      })
+    }
+
+    return () => {
+      EventBus.off('dungeon-enter', handler)
+      gameRef.current?.destroy(true)
+      gameRef.current = null
+    }
   }, [])
 
   const handleLogout = () => {

@@ -13,7 +13,7 @@ public class DungeonResponse {
     private String toeicPart;
     private int requiredLevel;
     private String region;
-    private boolean isWeeklyBoss;
+    private boolean weeklyBoss;
 
     public static DungeonResponse from(Dungeon d) {
         return DungeonResponse.builder()
@@ -23,7 +23,7 @@ public class DungeonResponse {
                 .toeicPart(d.getToeicPart().name())
                 .requiredLevel(d.getRequiredLevel())
                 .region(d.getRegion())
-                .isWeeklyBoss(d.isWeeklyBoss())
+                .weeklyBoss(d.isWeeklyBoss())
                 .build();
     }
 }
