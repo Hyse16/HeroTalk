@@ -53,6 +53,11 @@ public class Battle {
     @Column(name = "current_monster_hp")
     private Integer currentMonsterHp;
 
+    /** 배틀 진행 중 캐릭터 현재 HP (배틀 종료 시 캐릭터 엔티티에 반영하지 않음 — 배틀마다 초기화) */
+    @Column(name = "current_character_hp", nullable = false)
+    @Builder.Default
+    private int currentCharacterHp = 0;
+
     public enum BattleResult {
         WIN, LOSE, FLEE
     }
@@ -68,6 +73,17 @@ public class Battle {
     public int damageMonster(int damage) {
         this.currentMonsterHp = Math.max(0, this.currentMonsterHp - damage);
         return this.currentMonsterHp;
+    }
+
+    /** 캐릭터에 데미지 적용 → 남은 HP 반환 */
+    public int damageCharacter(int damage) {
+        this.currentCharacterHp = Math.max(0, this.currentCharacterHp - damage);
+        return this.currentCharacterHp;
+    }
+
+    /** 캐릭터 사망 여부 */
+    public boolean isCharacterDead() {
+        return this.currentCharacterHp <= 0;
     }
 
     /** 배틀 도망 처리 */
