@@ -1,7 +1,12 @@
 package org.herotalk.domain.battle.service;
 
 import org.herotalk.domain.battle.dto.BattleStartResponse;
+import org.herotalk.domain.battle.dto.BattleTurnRequest;
+import org.herotalk.domain.battle.dto.BattleTurnResponse;
+import org.herotalk.domain.battle.entity.Battle;
+import org.herotalk.domain.battle.entity.BattleTurn;
 import org.herotalk.domain.battle.repository.BattleRepository;
+import org.herotalk.domain.battle.repository.BattleTurnRepository;
 import org.herotalk.domain.character.entity.Character;
 import org.herotalk.domain.character.entity.CharacterStats;
 import org.herotalk.domain.character.repository.CharacterRepository;
@@ -12,6 +17,7 @@ import org.herotalk.domain.dungeon.repository.DungeonRepository;
 import org.herotalk.domain.dungeon.repository.MonsterRepository;
 import org.herotalk.domain.question.entity.Question;
 import org.herotalk.domain.question.repository.QuestionRepository;
+import org.herotalk.domain.review.repository.ReviewQuestionRepository;
 import org.herotalk.domain.user.entity.User;
 import org.herotalk.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,11 +42,15 @@ class BattleServiceTest {
     @Autowired DungeonRepository dungeonRepository;
     @Autowired QuestionRepository questionRepository;
     @Autowired BattleRepository battleRepository;
+    @Autowired ReviewQuestionRepository reviewQuestionRepository;
+    @Autowired BattleTurnRepository battleTurnRepository;
 
     User user;
     Character character;
     Monster monster;
     Question question;
+
+    private Long startedBattleId;
 
     @BeforeEach
     void setUp() {
@@ -64,6 +74,11 @@ class BattleServiceTest {
                 .prepTime(30).answerTime(45).build());
     }
 
+    private void startBattle() {
+        BattleStartResponse resp = battleService.startBattle(user.getId(), monster.getId());
+        startedBattleId = resp.getBattleId();
+    }
+
     @Test
     void startBattle_배틀_생성_및_첫문제_선택() {
         BattleStartResponse response = battleService.startBattle(user.getId(), monster.getId());
@@ -73,5 +88,96 @@ class BattleServiceTest {
         assertThat(response.getCharacterCurrentHp()).isEqualTo(character.getMaxHp());
         assertThat(response.getQuestion()).isNotNull();
         assertThat(battleRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void processTurn_ATTACK_데미지계산_정상() {
+        startBattle();
+        BattleTurnRequest req =
+            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 90);
+
+        BattleTurnResponse resp =
+            battleService.processTurn(user.getId(), startedBattleId, req);
+
+        // baseDamage = 10 + (3*2) = 16 (WARRIOR fluency=3), multiplier=1.0 → damageDealt=16
+        assertThat(resp.getDamageDealt()).isEqualTo(16);
+        assertThat(resp.isCritical()).isFalse();
+        assertThat(resp.isBattleEnded()).isFalse();
+        assertThat(resp.getNextQuestion()).isNotNull();
+    }
+
+    @Test
+    void processTurn_ATTACK_100점_크리티컬() {
+        startBattle();
+        BattleTurnRequest req =
+            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 100);
+
+        BattleTurnResponse resp =
+            battleService.processTurn(user.getId(), startedBattleId, req);
+
+        assertThat(resp.isCritical()).isTrue();
+        // baseDamage=16 * 1.5 = 24
+        assertThat(resp.getDamageDealt()).isEqualTo(24);
+    }
+
+    @Test
+    void processTurn_WIN_배틀종료() {
+        Monster weakMonster = monsterRepository.save(Monster.builder()
+                .dungeon(monster.getDungeon()).name("약한슬라임").hp(1).attackPower(10)
+                .expReward(50).goldReward(10)
+                .monsterType(Monster.MonsterType.NORMAL)
+                .toeicPart(Dungeon.ToeicPart.PART2).build());
+
+        BattleStartResponse startResp = battleService.startBattle(user.getId(), weakMonster.getId());
+        BattleTurnRequest req =
+            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 80);
+
+        BattleTurnResponse resp =
+            battleService.processTurn(user.getId(), startResp.getBattleId(), req);
+
+        assertThat(resp.isBattleEnded()).isTrue();
+        assertThat(resp.getResult()).isEqualTo(Battle.BattleResult.WIN);
+        assertThat(resp.getExpGained()).isEqualTo(50);
+        assertThat(resp.getGoldGained()).isEqualTo(10);
+    }
+
+    @Test
+    void processTurn_FLEE_정상() {
+        startBattle();
+        BattleTurnRequest req =
+            new BattleTurnRequest(BattleTurn.TurnAction.FLEE, null);
+
+        BattleTurnResponse resp =
+            battleService.processTurn(user.getId(), startedBattleId, req);
+
+        assertThat(resp.isBattleEnded()).isTrue();
+        assertThat(resp.getResult()).isEqualTo(Battle.BattleResult.FLEE);
+        assertThat(resp.getExpGained()).isEqualTo(0);
+    }
+
+    @Test
+    void processTurn_FLEE_3회초과_예외() {
+        for (int i = 0; i < 3; i++) {
+            BattleStartResponse s = battleService.startBattle(user.getId(), monster.getId());
+            battleService.processTurn(user.getId(), s.getBattleId(),
+                    new BattleTurnRequest(BattleTurn.TurnAction.FLEE, null));
+        }
+        BattleStartResponse s = battleService.startBattle(user.getId(), monster.getId());
+        assertThatThrownBy(() ->
+            battleService.processTurn(user.getId(), s.getBattleId(),
+                    new BattleTurnRequest(BattleTurn.TurnAction.FLEE, null))
+        ).isInstanceOf(IllegalStateException.class)
+         .hasMessageContaining("도망");
+    }
+
+    @Test
+    void processTurn_40점이하_복습등록() {
+        startBattle();
+        BattleTurnRequest req =
+            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 30);
+
+        battleService.processTurn(user.getId(), startedBattleId, req);
+
+        assertThat(reviewQuestionRepository.count()).isEqualTo(1);
     }
 }

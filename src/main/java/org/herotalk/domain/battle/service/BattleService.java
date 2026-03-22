@@ -2,14 +2,23 @@ package org.herotalk.domain.battle.service;
 
 import lombok.RequiredArgsConstructor;
 import org.herotalk.domain.battle.dto.BattleStartResponse;
+import org.herotalk.domain.battle.dto.BattleTurnRequest;
+import org.herotalk.domain.battle.dto.BattleTurnResponse;
 import org.herotalk.domain.battle.entity.Battle;
+import org.herotalk.domain.battle.entity.BattleTurn;
 import org.herotalk.domain.battle.repository.BattleRepository;
+import org.herotalk.domain.battle.repository.BattleTurnRepository;
 import org.herotalk.domain.character.entity.Character;
+import org.herotalk.domain.character.entity.CharacterStats;
 import org.herotalk.domain.character.repository.CharacterRepository;
 import org.herotalk.domain.character.repository.CharacterStatsRepository;
 import org.herotalk.domain.dungeon.entity.Monster;
 import org.herotalk.domain.dungeon.repository.MonsterRepository;
 import org.herotalk.domain.question.entity.Question;
+import org.herotalk.domain.question.entity.QuestionHistory;
+import org.herotalk.domain.question.repository.QuestionHistoryRepository;
+import org.herotalk.domain.review.entity.ReviewQuestion;
+import org.herotalk.domain.review.repository.ReviewQuestionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +35,9 @@ public class BattleService {
     private final MonsterRepository monsterRepository;
     private final BattleDamageCalculator damageCalculator;
     private final QuestionSelector questionSelector;
+    private final BattleTurnRepository battleTurnRepository;
+    private final ReviewQuestionRepository reviewQuestionRepository;
+    private final QuestionHistoryRepository questionHistoryRepository;
 
     @Transactional
     public BattleStartResponse startBattle(Long userId, Long monsterId) {
@@ -56,5 +68,148 @@ public class BattleService {
                 .characterCurrentHp(battle.getCurrentCharacterHp())
                 .question(BattleStartResponse.QuestionDto.from(firstQuestion))
                 .build();
+    }
+
+    @Transactional
+    public BattleTurnResponse processTurn(Long userId, Long battleId, BattleTurnRequest request) {
+        Character character = characterRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalStateException("캐릭터를 찾을 수 없습니다"));
+
+        Battle battle = battleRepository.findByIdAndCharacterId(battleId, character.getId())
+                .orElseThrow(() -> new IllegalArgumentException("배틀을 찾을 수 없습니다"));
+
+        if (battle.getResult() != null) {
+            throw new IllegalStateException("이미 종료된 배틀입니다");
+        }
+
+        BattleTurn.TurnAction action = request.getAction();
+
+        if (action == BattleTurn.TurnAction.FLEE && !character.canFlee()) {
+            throw new IllegalStateException("오늘 도망 횟수를 초과했습니다");
+        }
+
+        if ((action == BattleTurn.TurnAction.ATTACK || action == BattleTurn.TurnAction.HINT)
+                && request.getScore() == null) {
+            throw new IllegalArgumentException("해당 액션에는 점수가 필요합니다");
+        }
+
+        CharacterStats stats = characterStatsRepository.findByCharacterId(character.getId())
+                .orElseThrow(() -> new IllegalStateException("캐릭터 스탯을 찾을 수 없습니다"));
+
+        int score = request.getScore() != null ? request.getScore() : 0;
+
+        BattleDamageCalculator.AttackResult attackResult = damageCalculator.calculateAttack(action, score, stats);
+        int damageTaken = damageCalculator.calculateCounter(action, score, battle.getMonster(), stats);
+
+        battle.damageMonster(attackResult.damageDealt());
+        battle.damageCharacter(damageTaken);
+
+        int turnNumber = battleTurnRepository.countByBattleId(battleId) + 1;
+
+        Question currentQuestion = resolveCurrentQuestion(battle);
+        BattleTurn turn = BattleTurn.builder()
+                .battle(battle)
+                .question(currentQuestion)
+                .turnNumber(turnNumber)
+                .action(action)
+                .score(request.getScore())
+                .damageDealt(attackResult.damageDealt())
+                .damageTaken(damageTaken)
+                .isCritical(attackResult.isCritical())
+                .createdAt(LocalDateTime.now())
+                .build();
+        turn = battleTurnRepository.save(turn);
+
+        if (action == BattleTurn.TurnAction.ATTACK && score <= 40) {
+            registerReview(character, turn);
+        }
+
+        boolean monsterDead = battle.getCurrentMonsterHp() == 0;
+        boolean charDead = battle.isCharacterDead();
+        boolean isFlee = action == BattleTurn.TurnAction.FLEE;
+
+        if (monsterDead || charDead || isFlee) {
+            return finishBattle(battle, character, turn, monsterDead, isFlee);
+        }
+
+        Question nextQuestion = questionSelector.select(character, battle.getMonster().getToeicPart(), Set.of());
+
+        return BattleTurnResponse.builder()
+                .turnNumber(turnNumber)
+                .action(action)
+                .score(request.getScore())
+                .damageDealt(attackResult.damageDealt())
+                .damageTaken(damageTaken)
+                .isCritical(attackResult.isCritical())
+                .monsterCurrentHp(battle.getCurrentMonsterHp())
+                .characterCurrentHp(battle.getCurrentCharacterHp())
+                .battleEnded(false)
+                .nextQuestion(BattleStartResponse.QuestionDto.from(nextQuestion))
+                .build();
+    }
+
+    private BattleTurnResponse finishBattle(Battle battle, Character character, BattleTurn lastTurn,
+                                             boolean monsterDead, boolean isFlee) {
+        Battle.BattleResult result;
+        int expGained;
+        int goldGained;
+
+        if (isFlee) {
+            result = Battle.BattleResult.FLEE;
+            expGained = 0;
+            goldGained = 0;
+            character.recordFlee();
+        } else if (monsterDead) {
+            result = Battle.BattleResult.WIN;
+            expGained = battle.getMonster().getExpReward();
+            goldGained = battle.getMonster().getGoldReward();
+        } else {
+            result = Battle.BattleResult.LOSE;
+            expGained = 50;
+            goldGained = 0;
+        }
+
+        character.addExp(expGained);
+        character.addGold(goldGained);
+
+        int totalTurns = battleTurnRepository.countByBattleId(battle.getId());
+        battle.finish(result, totalTurns, expGained, goldGained);
+
+        return BattleTurnResponse.builder()
+                .turnNumber(lastTurn.getTurnNumber())
+                .action(lastTurn.getAction())
+                .score(lastTurn.getScore())
+                .damageDealt(lastTurn.getDamageDealt())
+                .damageTaken(lastTurn.getDamageTaken())
+                .isCritical(lastTurn.isCritical())
+                .monsterCurrentHp(battle.getCurrentMonsterHp())
+                .characterCurrentHp(battle.getCurrentCharacterHp())
+                .battleEnded(true)
+                .result(result)
+                .expGained(expGained)
+                .goldGained(goldGained)
+                .build();
+    }
+
+    private Question resolveCurrentQuestion(Battle battle) {
+        return questionHistoryRepository
+                .findTopByCharacterIdOrderByLastShownAtDesc(battle.getCharacter().getId())
+                .orElseThrow(() -> new IllegalStateException("현재 문제를 찾을 수 없습니다"))
+                .getQuestion();
+    }
+
+    private void registerReview(Character character, BattleTurn turn) {
+        boolean exists = reviewQuestionRepository
+                .findByCharacterIdAndQuestionIdAndIsClearedFalse(
+                        character.getId(), turn.getQuestion().getId())
+                .isPresent();
+        if (!exists) {
+            reviewQuestionRepository.save(ReviewQuestion.builder()
+                    .character(character)
+                    .question(turn.getQuestion())
+                    .battleTurn(turn)
+                    .originalScore(turn.getScore() != null ? turn.getScore() : 0)
+                    .build());
+        }
     }
 }
