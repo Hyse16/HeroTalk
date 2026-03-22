@@ -45,9 +45,11 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/login/oauth2/**",
                                 "/oauth2/**",
-                                "/actuator/health"
+                                "/actuator/health",
+                                "/h2-console/**"
                         ).permitAll()
                         .anyRequest().authenticated())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService))

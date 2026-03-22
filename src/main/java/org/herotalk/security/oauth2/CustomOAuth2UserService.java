@@ -56,18 +56,28 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private User saveOrUpdate(OAuth2UserInfo userInfo) {
         User.Provider provider = User.Provider.valueOf(userInfo.getProvider());
-        String email = userInfo.getEmail();
+        String providerId = userInfo.getId();
 
+        // 1. providerId로 먼저 찾기 (이메일 동의 여부 무관하게 항상 식별 가능)
+        Optional<User> existingUser = userRepository.findByProviderIdAndProvider(providerId, provider);
+        if (existingUser.isPresent()) {
+            return existingUser.get();
+        }
+
+        // 2. 이메일이 있으면 이메일로도 중복 확인
+        String email = userInfo.getEmail();
         if (email != null) {
-            Optional<User> existingUser = userRepository.findByEmail(email);
-            if (existingUser.isPresent()) {
-                return existingUser.get();
+            Optional<User> userByEmail = userRepository.findByEmail(email);
+            if (userByEmail.isPresent()) {
+                return userByEmail.get();
             }
         }
 
-        String nickname = userInfo.getName() != null ? userInfo.getName() : "User_" + userInfo.getId().substring(0, 6);
+        // 3. 신규 유저 생성 (이메일 없으면 플레이스홀더 사용)
+        String resolvedEmail = email != null ? email : provider.name().toLowerCase() + "_" + providerId + "@herotalk.local";
+        String nickname = userInfo.getName() != null ? userInfo.getName() : "User_" + providerId.substring(0, 6);
 
-        User newUser = User.createSocial(email, provider, userInfo.getId(), nickname);
+        User newUser = User.createSocial(resolvedEmail, provider, providerId, nickname);
         return userRepository.save(newUser);
     }
 }
