@@ -43,6 +43,12 @@ export default class TownScene extends Phaser.Scene {
     this.gateZone = this.add.zone(gateX, gateY, 80, 100).setOrigin(0.5)
     this.physics.world.enable(this.gateZone, Phaser.Physics.Arcade.STATIC_BODY)
 
+    // Gate hint text (initialized here, toggled in update)
+    this._gateHint = this.add.text(gateX, gateY + 60,
+      'Enter 키로 입장', {
+        fontSize: '12px', color: '#f0c040', fontFamily: 'monospace',
+      }).setOrigin(0.5).setAlpha(0)
+
     // NPC (left-center area)
     const npcX = W / 2 - 200
     const npcY = H / 2 + 50
@@ -87,7 +93,6 @@ export default class TownScene extends Phaser.Scene {
     this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)
 
     this.npcDialogShown = false
-    this._gateHint = null
 
     EventBus.emit('scene-ready', this)
   }
@@ -146,13 +151,7 @@ export default class TownScene extends Phaser.Scene {
       })
     }
 
-    // Gate hint text (show only when near)
-    if (!this._gateHint) {
-      this._gateHint = this.add.text(this.gateZone.x, this.gateZone.y + 60,
-        'Enter 키로 입장', {
-          fontSize: '12px', color: '#f0c040', fontFamily: 'monospace',
-        }).setOrigin(0.5).setAlpha(0)
-    }
+    // Gate hint text (toggle visibility based on proximity)
     this._gateHint.setAlpha(nearGate ? 1 : 0)
   }
 }
