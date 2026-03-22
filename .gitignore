@@ -63,10 +63,16 @@ src/main/generated/
 
 # Environment variables
 .env
-.env.local
+.env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
 
-# Spring Boot
+# Spring Boot 민감한 설정 파일
 /src/main/resources/application-local.yml
+/src/main/resources/application-secret.yml
+/src/main/resources/application-prod.yml
 
 # Git worktrees
 .worktrees/
