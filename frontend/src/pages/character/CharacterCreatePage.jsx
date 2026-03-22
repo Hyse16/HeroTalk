@@ -4,14 +4,6 @@ import heroImg from '@/assets/hero.png'
 import { checkCharacterExists, createCharacter } from '@/api/characterApi'
 import './CharacterCreatePage.css'
 
-// 직업별 이미지 맵 (추후 직업별 이미지로 교체)
-const jobImages = {
-  WARRIOR: heroImg,
-  MAGE: heroImg,
-  KNIGHT: heroImg,
-  RANGER: heroImg,
-}
-
 // 직업 정의 데이터
 const JOBS = [
   {
@@ -62,9 +54,15 @@ export default function CharacterCreatePage() {
 
   // 마운트 시 기존 캐릭터 확인 (이미 있으면 /game으로)
   useEffect(() => {
+    let cancelled = false
     checkCharacterExists()
-      .then(() => navigate('/game', { replace: true }))
-      .catch(() => setIsChecking(false))
+      .then(() => {
+        if (!cancelled) navigate('/game', { replace: true })
+      })
+      .catch(() => {
+        if (!cancelled) setIsChecking(false)
+      })
+    return () => { cancelled = true }
   }, [navigate])
 
   const isNameValid = name.trim().length >= 2 && name.trim().length <= 20
@@ -105,7 +103,7 @@ export default function CharacterCreatePage() {
           <div className="cc-preview-label">CHARACTER PREVIEW</div>
           <div className={`cc-avatar ${selectedJob ? 'cc-avatar-selected' : ''}`}>
             <img
-              src={selectedJob ? jobImages[selectedJob] : heroImg}
+              src={heroImg}
               alt="character"
             />
           </div>
