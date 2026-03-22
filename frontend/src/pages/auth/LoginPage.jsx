@@ -1,22 +1,23 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '@/api/axios'
 import useAuthStore from '@/store/authStore'
 import './LoginPage.css'
 
+/* ── 별 데이터 (모듈 레벨 - 렌더와 무관하게 한 번만 생성) ── */
+const STARS = Array.from({ length: 100 }, (_, i) => ({
+  id: i,
+  left: `${Math.random() * 100}%`,
+  top: `${Math.random() * 100}%`,
+  size: Math.random() * 2.5 + 0.5,
+  dur: `${Math.random() * 5 + 2}s`,
+  delay: `${Math.random() * 6}s`,
+  maxOpacity: Math.random() * 0.5 + 0.2,
+}))
+
 /* ── 별 필드 ── */
 function StarField() {
-  const stars = useMemo(() =>
-    Array.from({ length: 100 }, (_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      size: Math.random() * 2.5 + 0.5,
-      dur: `${Math.random() * 5 + 2}s`,
-      delay: `${Math.random() * 6}s`,
-      maxOpacity: Math.random() * 0.5 + 0.2,
-    })), []
-  )
+  const stars = STARS
   return (
     <div className="stars">
       {stars.map((s) => (
@@ -30,22 +31,21 @@ function StarField() {
   )
 }
 
+/* ── 불꽃 데이터 (모듈 레벨) ── */
+const EMBER_COLORS = ['#facc15', '#f97316', '#fb923c', '#fbbf24', '#ef4444', '#a78bfa']
+const EMBERS = Array.from({ length: 24 }, (_, i) => ({
+  id: i,
+  left: `${Math.random() * 100}%`,
+  size: `${Math.random() * 3 + 1}px`,
+  color: EMBER_COLORS[Math.floor(Math.random() * EMBER_COLORS.length)],
+  dur: `${Math.random() * 8 + 5}s`,
+  delay: `${Math.random() * 8}s`,
+  drift: `${(Math.random() - 0.5) * 80}px`,
+}))
+
 /* ── 불꽃 파티클 ── */
 function Embers() {
-  const embers = useMemo(() =>
-    Array.from({ length: 24 }, (_, i) => {
-      const colors = ['#facc15', '#f97316', '#fb923c', '#fbbf24', '#ef4444', '#a78bfa']
-      return {
-        id: i,
-        left: `${Math.random() * 100}%`,
-        size: `${Math.random() * 3 + 1}px`,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        dur: `${Math.random() * 8 + 5}s`,
-        delay: `${Math.random() * 8}s`,
-        drift: `${(Math.random() - 0.5) * 80}px`,
-      }
-    }), []
-  )
+  const embers = EMBERS
   return (
     <div className="embers">
       {embers.map((e) => (
