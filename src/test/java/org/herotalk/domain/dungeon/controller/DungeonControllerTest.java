@@ -33,7 +33,7 @@ class DungeonControllerTest {
         savedDungeon = dungeonRepository.save(Dungeon.builder()
                 .name("초보자 숲")
                 .toeicPart(Dungeon.ToeicPart.PART2)
-                .requiredLevel(1)
+                .requiredLevel(3)
                 .region("초보자 숲")
                 .build());
 
@@ -54,7 +54,8 @@ class DungeonControllerTest {
     void getDungeons_returnsList() throws Exception {
         mockMvc.perform(get("/api/dungeons"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data").isNotEmpty());
     }
 
     @Test

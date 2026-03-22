@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface MonsterRepository extends JpaRepository<Monster, Long> {
     List<Monster> findByDungeon(Dungeon dungeon);
+    List<Monster> findByDungeonId(Long dungeonId);
 }
