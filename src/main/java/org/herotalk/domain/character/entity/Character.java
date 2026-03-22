@@ -28,6 +28,10 @@ public class Character extends BaseTimeEntity {
     @Column(name = "job", nullable = false)
     private Job job;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", nullable = false)
+    private Gender gender;
+
     @Column(name = "level", nullable = false)
     @Builder.Default
     private int level = 1;
@@ -63,6 +67,8 @@ public class Character extends BaseTimeEntity {
     public enum Job {
         WARRIOR, MAGE, KNIGHT, RANGER
     }
+
+    public enum Gender { MALE, FEMALE }
 
     // ── 도메인 변이 메서드 ──
 
