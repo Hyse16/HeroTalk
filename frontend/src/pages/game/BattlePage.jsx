@@ -52,8 +52,8 @@ export default function BattlePage() {
   const { transcript, isListening, startListening, stopListening } = useSpeechRecognition()
 
   useEffect(() => {
-    if (!battle) navigate('/game', { replace: true })
-  }, [battle, navigate])
+    if (!battle || !monster) navigate('/game', { replace: true })
+  }, [battle, monster, navigate])
 
   const triggerShake = () => {
     setMonsterShake(true)
@@ -248,7 +248,6 @@ export default function BattlePage() {
             <div className="battle-result-stats">
               {result.expGained > 0 && <div>경험치 +{result.expGained} EXP</div>}
               {result.goldGained > 0 && <div>골드 +{result.goldGained} G</div>}
-              {result.type === 'LOSE' && <div>패배 위로 경험치 +50 EXP</div>}
             </div>
             <button
               className="battle-result-btn"
