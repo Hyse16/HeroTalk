@@ -41,6 +41,11 @@ public class QuestionSelector {
         }
 
         if (candidates.isEmpty()) {
+            // 이번 배틀에서도 모두 출제한 경우: usedInBattle 제한 없이 재조회
+            candidates = getCandidates(toeicPart, Set.of(), Set.of());
+        }
+
+        if (candidates.isEmpty()) {
             throw new IllegalStateException("출제 가능한 문제가 없습니다 (toeicPart=" + toeicPart + ")");
         }
 

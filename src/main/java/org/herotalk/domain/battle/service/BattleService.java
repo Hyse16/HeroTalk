@@ -132,7 +132,10 @@ public class BattleService {
             return finishBattle(battle, character, turn, monsterDead, isFlee);
         }
 
-        Question nextQuestion = questionSelector.select(character, battle.getMonster().getToeicPart(), Set.of());
+        Set<Long> usedIds = battleTurnRepository.findByBattleId(battleId).stream()
+                .map(t -> t.getQuestion().getId())
+                .collect(java.util.stream.Collectors.toSet());
+        Question nextQuestion = questionSelector.select(character, battle.getMonster().getToeicPart(), usedIds);
 
         return BattleTurnResponse.builder()
                 .turnNumber(turnNumber)
