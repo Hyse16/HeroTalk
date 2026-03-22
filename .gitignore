@@ -76,3 +76,4 @@ frontend/.env.*
 
 # Git worktrees
 .worktrees/
+.superpowers/
