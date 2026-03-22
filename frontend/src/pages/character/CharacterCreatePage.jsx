@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import heroImg from '@/assets/hero.png'
+import CharacterSvg from '@/components/CharacterSvg'
 import { checkCharacterExists, createCharacter } from '@/api/characterApi'
 import './CharacterCreatePage.css'
 
@@ -49,6 +49,7 @@ export default function CharacterCreatePage() {
   const [isChecking, setIsChecking] = useState(true)
   const [name, setName] = useState('')
   const [selectedJob, setSelectedJob] = useState(null)
+  const [gender, setGender] = useState('MALE')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -73,7 +74,7 @@ export default function CharacterCreatePage() {
     setIsLoading(true)
     setError(null)
     try {
-      await createCharacter(name.trim(), selectedJob)
+      await createCharacter(name.trim(), selectedJob, gender)
       navigate('/game', { replace: true })
     } catch (err) {
       setError(err.response?.data?.message || '캐릭터 생성에 실패했습니다.')
@@ -102,10 +103,22 @@ export default function CharacterCreatePage() {
         <div className="cc-preview">
           <div className="cc-preview-label">CHARACTER PREVIEW</div>
           <div className={`cc-avatar ${selectedJob ? 'cc-avatar-selected' : ''}`}>
-            <img
-              src={heroImg}
-              alt="character"
+            <CharacterSvg
+              job={selectedJob || 'WARRIOR'}
+              gender={gender}
+              width={80}
+              height={96}
             />
+          </div>
+          <div className="cc-gender-toggle">
+            <button
+              className={`cc-gender-btn ${gender === 'MALE' ? 'active' : ''}`}
+              onClick={() => setGender('MALE')}
+            >♂ 남성</button>
+            <button
+              className={`cc-gender-btn ${gender === 'FEMALE' ? 'active' : ''}`}
+              onClick={() => setGender('FEMALE')}
+            >♀ 여성</button>
           </div>
           <div className="cc-job-name">
             {currentJob ? currentJob.name : '???'}

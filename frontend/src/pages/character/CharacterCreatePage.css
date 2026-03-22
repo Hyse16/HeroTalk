@@ -257,3 +257,32 @@
   font-size: 14px;
   letter-spacing: 2px;
 }
+
+.cc-gender-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.cc-gender-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 5px 16px;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: sans-serif;
+}
+.cc-gender-btn.active {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+.cc-gender-btn:hover:not(.active) {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #aaa;
+}
+.cc-avatar svg {
+  display: block;
+}

@@ -5,7 +5,7 @@ export async function checkCharacterExists() {
   return response.data.data // CharacterResponse
 }
 
-export async function createCharacter(name, job) {
-  const response = await api.post('/characters', { name, job })
+export async function createCharacter(name, job, gender) {
+  const response = await api.post('/characters', { name, job, gender })
   return response.data.data // CharacterResponse
 }
