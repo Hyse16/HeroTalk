@@ -34,6 +34,7 @@ public class CharacterService {
                 .user(user)
                 .name(request.getName())
                 .job(request.getJob())
+                .gender(request.getGender())
                 .build();
         Character savedCharacter = characterRepository.save(character);
 

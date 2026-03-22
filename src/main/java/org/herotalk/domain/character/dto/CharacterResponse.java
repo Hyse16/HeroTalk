@@ -12,6 +12,7 @@ public class CharacterResponse {
     private Long id;
     private String name;
     private Character.Job job;
+    private Character.Gender gender;
     private int level;
     private long exp;
     private long expToNext;
@@ -36,6 +37,7 @@ public class CharacterResponse {
                 .id(character.getId())
                 .name(character.getName())
                 .job(character.getJob())
+                .gender(character.getGender())
                 .level(character.getLevel())
                 .exp(character.getExp())
                 .expToNext(character.getExpToNext())
