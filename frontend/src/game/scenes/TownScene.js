@@ -245,6 +245,7 @@ export default class TownScene extends Phaser.Scene {
     const W = this.scale.width
     const H = this.scale.height
     const GY = H * 0.64  // 지면 y
+    this._GY = GY        // update()에서 사용하기 위해 저장
 
     this._drawSky(W, H)
     this._drawGround(W, H, GY)
@@ -474,6 +475,12 @@ export default class TownScene extends Phaser.Scene {
     else if (right) body.setVelocityX(speed)
     if (up)         body.setVelocityY(-speed)
     else if (down)  body.setVelocityY(speed)
+
+    // 지면 범위 클램핑 — 하늘/땅 아래로 벗어나지 않도록
+    const minY = this._GY - 20
+    const maxY = this._GY + 30
+    if (this.player.y < minY) this.player.y = minY
+    if (this.player.y > maxY) this.player.y = maxY
 
     this.playerLabel.setPosition(this.player.x, this.player.y - 85)
 
