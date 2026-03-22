@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.herotalk.domain.user.entity.User;
 import org.herotalk.global.entity.BaseTimeEntity;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "characters")
@@ -64,6 +65,13 @@ public class Character extends BaseTimeEntity {
     @Builder.Default
     private int appearance = 1;
 
+    @Column(name = "flee_count", nullable = false)
+    @Builder.Default
+    private int fleeCount = 0;
+
+    @Column(name = "flee_reset_date")
+    private LocalDate fleeResetDate;
+
     public enum Job {
         WARRIOR, MAGE, KNIGHT, RANGER
     }
@@ -103,5 +111,24 @@ public class Character extends BaseTimeEntity {
     public void spendGold(int amount) {
         if (this.gold < amount) throw new IllegalArgumentException("골드가 부족합니다.");
         this.gold -= amount;
+    }
+
+    /** 오늘 도망 가능 여부 (일일 3회 제한) */
+    public boolean canFlee() {
+        if (fleeResetDate == null || !fleeResetDate.equals(LocalDate.now())) {
+            return true;
+        }
+        return fleeCount < 3;
+    }
+
+    /** 도망 횟수 기록 (날짜 바뀌면 자동 리셋) */
+    public void recordFlee() {
+        LocalDate today = LocalDate.now();
+        if (fleeResetDate == null || !fleeResetDate.equals(today)) {
+            this.fleeCount = 1;
+            this.fleeResetDate = today;
+        } else {
+            this.fleeCount++;
+        }
     }
 }
