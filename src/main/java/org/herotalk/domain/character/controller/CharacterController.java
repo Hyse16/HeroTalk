@@ -7,6 +7,7 @@ import org.herotalk.domain.character.dto.CharacterResponse;
 import org.herotalk.domain.character.service.CharacterService;
 import org.herotalk.global.response.ApiResponse;
 import org.herotalk.security.CustomUserDetails;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,7 @@ public class CharacterController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CharacterCreateRequest request) {
         CharacterResponse response = characterService.createCharacter(userDetails.getUserId(), request);
-        return ResponseEntity.ok(ApiResponse.ok(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
     }
 
     @GetMapping("/me")

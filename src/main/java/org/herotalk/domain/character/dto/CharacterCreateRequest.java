@@ -17,4 +17,7 @@ public class CharacterCreateRequest {
 
     @NotNull(message = "직업은 필수입니다")
     private Character.Job job;
+
+    @NotNull(message = "성별은 필수입니다")
+    private Character.Gender gender;
 }
