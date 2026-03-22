@@ -46,12 +46,7 @@ function drawJobCharacter(gfx, job, gender) {
   gfx.fillStyle(SKIN, 1)
   gfx.fillCircle(0, -43, 12)
 
-  // 눈
-  gfx.fillStyle(0x333333, 1)
-  gfx.fillEllipse(-5, -43, 4, 3)
-  gfx.fillEllipse( 5, -43, 4, 3)
-
-  // 직업별 머리/장비
+  // 직업별 머리/장비 (눈보다 먼저 그려야 눈이 가려지지 않음)
   if (job === 'WARRIOR') {
     // 헤어
     gfx.fillStyle(hairColor, 1)
@@ -72,7 +67,6 @@ function drawJobCharacter(gfx, job, gender) {
     gfx.fillTriangle(-11, -44, 11, -44, 0, -76)
     gfx.fillRoundedRect(-13, -47, 26, 7, 2)
     if (isFemale) {
-      // 금발 앞머리
       gfx.fillStyle(hairColor, 1)
       gfx.fillRect(-14, -52, 6, 16)
       gfx.fillRect(8,  -52, 6, 16)
@@ -88,11 +82,9 @@ function drawJobCharacter(gfx, job, gender) {
     gfx.fillCircle(14, -37, 3)
 
   } else if (job === 'KNIGHT') {
-    // 투구 (헤어 감춤)
+    // 투구
     gfx.fillStyle(p.accent, 1)
     gfx.fillRoundedRect(-13, -57, 26, 18, 4)
-    gfx.fillStyle(p.body, 0.85)
-    gfx.fillRect(-9, -43, 18, 5) // 바이저
     // 방패
     gfx.fillStyle(p.accent, 1)
     gfx.fillRoundedRect(-26, -28, 13, 20, 2)
@@ -119,6 +111,22 @@ function drawJobCharacter(gfx, job, gender) {
     gfx.moveTo(24 - 19, -12 - 11)
     gfx.lineTo(24 - 19, -12 + 11)
     gfx.strokePath()
+  }
+
+  // ── 눈: 헤드기어 이후 마지막에 그려야 가려지지 않음 ──
+  if (job === 'KNIGHT') {
+    // 바이저 슬릿 안 눈 (흰 점)
+    gfx.fillStyle(0xffffff, 0.9)
+    gfx.fillEllipse(-4, -43, 4, 2.5)
+    gfx.fillEllipse( 4, -43, 4, 2.5)
+  } else {
+    gfx.fillStyle(0x1a1a2a, 1)
+    gfx.fillEllipse(-5, -43, 5, 3.5)
+    gfx.fillEllipse( 5, -43, 5, 3.5)
+    // 눈 하이라이트
+    gfx.fillStyle(0xffffff, 0.6)
+    gfx.fillEllipse(-4, -44, 2, 2)
+    gfx.fillEllipse( 6, -44, 2, 2)
   }
 }
 
@@ -438,7 +446,7 @@ export default class TownScene extends Phaser.Scene {
   // ── 힌트 텍스트 ──────────────────────────────────────────────────────────
   _createHints() {
     const W = this.scale.width
-    this.add.text(W / 2, 20, 'WASD / 방향키 이동   |   던전 입구에서 Enter', {
+    this.add.text(W / 2, 20, 'WASD / 방향키rmfjsep zoflr 이동   |   던전 입구에서 Enter', {
       fontSize: '13px', color: '#606880', fontFamily: 'monospace',
     }).setOrigin(0.5)
 
