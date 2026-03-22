@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CharacterSvg from '@/components/CharacterSvg'
-import { checkCharacterExists, createCharacter } from '@/api/characterApi'
+import { getCharacter, createCharacter } from '@/api/characterApi'
 import './CharacterCreatePage.css'
 
 // 직업 정의 데이터
@@ -56,7 +56,7 @@ export default function CharacterCreatePage() {
   // 마운트 시 기존 캐릭터 확인 (이미 있으면 /game으로)
   useEffect(() => {
     let cancelled = false
-    checkCharacterExists()
+    getCharacter()
       .then(() => {
         if (!cancelled) navigate('/game', { replace: true })
       })
