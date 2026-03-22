@@ -71,12 +71,6 @@
   overflow: hidden;
   transition: border-color 0.3s;
 }
-.cc-avatar img {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-  image-rendering: pixelated;
-}
 .cc-avatar-selected {
   border-color: #f59e0b;
 }
