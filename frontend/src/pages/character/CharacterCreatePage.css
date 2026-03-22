@@ -1,0 +1,259 @@
+/* frontend/src/pages/character/CharacterCreatePage.css */
+
+.character-create-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 50%, #16213e 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  font-family: 'Cinzel', serif;
+  color: #fff;
+}
+
+.cc-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.cc-header-label {
+  color: #f59e0b;
+  font-size: 11px;
+  letter-spacing: 4px;
+  margin-bottom: 8px;
+}
+.cc-header-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+}
+.cc-header-sub {
+  color: #666;
+  font-size: 12px;
+  margin-top: 4px;
+  font-family: sans-serif;
+}
+
+.cc-body {
+  display: flex;
+  gap: 32px;
+  width: 100%;
+  max-width: 860px;
+  align-items: stretch;
+}
+
+.cc-preview {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 12px;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.cc-preview-label {
+  color: #f59e0b;
+  font-size: 9px;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+.cc-avatar {
+  width: 120px;
+  height: 120px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 2px solid rgba(245, 158, 11, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.cc-avatar img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.cc-avatar-selected {
+  border-color: #f59e0b;
+}
+.cc-job-name {
+  color: #f59e0b;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.cc-job-passive {
+  color: #888;
+  font-size: 11px;
+  margin-bottom: 24px;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.cc-stats {
+  width: 100%;
+}
+.cc-stats-label {
+  color: #888;
+  font-size: 9px;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+.cc-stat-row {
+  margin-bottom: 10px;
+}
+.cc-stat-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.cc-stat-name {
+  color: #aaa;
+  font-size: 11px;
+  font-family: sans-serif;
+}
+.cc-stat-dots {
+  display: flex;
+  gap: 4px;
+}
+.cc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 0.3s;
+}
+.cc-dot.filled {
+  background: #f59e0b;
+}
+
+.cc-form {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cc-section-label {
+  color: #f59e0b;
+  font-size: 9px;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.cc-name-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #fff;
+  font-size: 14px;
+  font-family: sans-serif;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.cc-name-input::placeholder {
+  color: #555;
+}
+.cc-name-input:focus {
+  border-color: #f59e0b;
+}
+
+.cc-job-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.cc-job-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.cc-job-card:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.05);
+}
+.cc-job-card.selected {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+.cc-job-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.cc-job-icon {
+  font-size: 18px;
+}
+.cc-job-card-name {
+  font-size: 13px;
+  font-weight: bold;
+  color: #aaa;
+  transition: color 0.2s;
+}
+.cc-job-card.selected .cc-job-card-name {
+  color: #f59e0b;
+}
+.cc-job-stat-strong {
+  color: #aaa;
+  font-size: 10px;
+  font-family: sans-serif;
+}
+.cc-job-passive-short {
+  color: #666;
+  font-size: 9px;
+  font-family: sans-serif;
+  margin-top: 2px;
+}
+
+.cc-error {
+  color: #f87171;
+  font-size: 12px;
+  font-family: sans-serif;
+}
+
+.cc-submit-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  color: #000;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  font-family: 'Cinzel', serif;
+  margin-top: auto;
+}
+.cc-submit-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.cc-submit-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+.cc-submit-btn:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.cc-loading {
+  min-height: 100vh;
+  background: #0d0d1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b;
+  font-size: 14px;
+  letter-spacing: 2px;
+}
