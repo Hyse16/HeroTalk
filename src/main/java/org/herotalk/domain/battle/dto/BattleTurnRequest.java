@@ -15,10 +15,13 @@ public class BattleTurnRequest {
     private TurnAction action;
 
     @Min(0) @Max(100)
-    private Integer score;  // ATTACK, HINT에만 필수
+    private Integer score;  // HINT에만 사용 (ATTACK은 Gemini가 채점)
 
-    public BattleTurnRequest(TurnAction action, Integer score) {
+    private String transcript;  // ATTACK 시 STT 결과 텍스트
+
+    public BattleTurnRequest(TurnAction action, Integer score, String transcript) {
         this.action = action;
         this.score = score;
+        this.transcript = transcript;
     }
 }

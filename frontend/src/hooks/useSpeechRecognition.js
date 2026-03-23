@@ -5,6 +5,8 @@ const useSpeechRecognition = () => {
   const [isListening, setIsListening] = useState(false)
   const [error, setError] = useState(null)
   const recognitionRef = useRef(null)
+  // ref로 transcript를 동기적으로 보관 — onend 타이밍 race condition 방지
+  const transcriptRef = useRef('')
 
   const startListening = useCallback(() => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -20,23 +22,27 @@ const useSpeechRecognition = () => {
     recognition.interimResults = false
 
     recognition.onstart = () => {
+      transcriptRef.current = ''   // 동기 초기화
+      setTranscript('')
       setIsListening(true)
       setError(null)
-      setTranscript('')
     }
 
     recognition.onresult = (event) => {
       const result = event.results[0][0].transcript
+      transcriptRef.current = result  // 동기 저장 — onend보다 먼저 확정됨
       setTranscript(result)
     }
 
     recognition.onerror = (event) => {
-      setError(`음성 인식 오류: ${event.error}`)
+      if (event.error !== 'no-speech') {
+        setError(`음성 인식 오류: ${event.error}`)
+      }
       setIsListening(false)
     }
 
     recognition.onend = () => {
-      setIsListening(false)
+      setIsListening(false)  // 여기서만 false로 변경 — stopListening은 stop()만 호출
     }
 
     recognitionRef.current = recognition
@@ -44,11 +50,12 @@ const useSpeechRecognition = () => {
   }, [])
 
   const stopListening = useCallback(() => {
+    // stop()만 호출 → onend가 setIsListening(false) 처리
+    // (직접 setIsListening하면 transcriptRef 업데이트 전에 effect 발동되는 race condition 발생)
     recognitionRef.current?.stop()
-    setIsListening(false)
   }, [])
 
-  return { transcript, isListening, error, startListening, stopListening }
+  return { transcript, transcriptRef, isListening, error, startListening, stopListening }
 }
 
 export default useSpeechRecognition

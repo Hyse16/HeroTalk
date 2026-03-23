@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.herotalk.domain.battle.dto.BattleStartResponse;
 import org.herotalk.domain.battle.dto.BattleTurnRequest;
 import org.herotalk.domain.battle.dto.BattleTurnResponse;
+import org.herotalk.global.service.GeminiService;
 import org.herotalk.domain.battle.entity.Battle;
 import org.herotalk.domain.battle.entity.BattleTurn;
 import org.herotalk.domain.battle.repository.BattleRepository;
@@ -38,6 +39,7 @@ public class BattleService {
     private final BattleTurnRepository battleTurnRepository;
     private final ReviewQuestionRepository reviewQuestionRepository;
     private final QuestionHistoryRepository questionHistoryRepository;
+    private final GeminiService geminiService;
 
     @Transactional
     public BattleStartResponse startBattle(Long userId, Long monsterId) {
@@ -88,15 +90,25 @@ public class BattleService {
             throw new IllegalStateException("오늘 도망 횟수를 초과했습니다");
         }
 
-        if ((action == BattleTurn.TurnAction.ATTACK || action == BattleTurn.TurnAction.HINT)
-                && request.getScore() == null) {
-            throw new IllegalArgumentException("해당 액션에는 점수가 필요합니다");
-        }
-
         CharacterStats stats = characterStatsRepository.findByCharacterId(character.getId())
                 .orElseThrow(() -> new IllegalStateException("캐릭터 스탯을 찾을 수 없습니다"));
 
-        int score = request.getScore() != null ? request.getScore() : 0;
+        Question currentQuestion = resolveCurrentQuestion(battle);
+
+        // ATTACK/HINT: Gemini AI 채점 (transcript 있을 때), PASS/FLEE: 0점
+        int score;
+        String feedbackGood = null, feedbackBad = null, sampleAnswer = null;
+
+        if (action == BattleTurn.TurnAction.ATTACK || action == BattleTurn.TurnAction.HINT) {
+            GeminiService.GeminiScoreResult gemini =
+                    geminiService.score(currentQuestion.getQuestionText(), request.getTranscript());
+            score = gemini.score();
+            feedbackGood = gemini.feedbackGood();
+            feedbackBad = gemini.feedbackBad();
+            sampleAnswer = gemini.sampleAnswer();
+        } else {
+            score = 0;  // PASS, FLEE
+        }
 
         BattleDamageCalculator.AttackResult attackResult = damageCalculator.calculateAttack(action, score, stats);
         int damageTaken = damageCalculator.calculateCounter(action, score, battle.getMonster(), stats);
@@ -106,13 +118,16 @@ public class BattleService {
 
         int turnNumber = battleTurnRepository.countByBattleId(battleId) + 1;
 
-        Question currentQuestion = resolveCurrentQuestion(battle);
         BattleTurn turn = BattleTurn.builder()
                 .battle(battle)
                 .question(currentQuestion)
                 .turnNumber(turnNumber)
                 .action(action)
-                .score(request.getScore())
+                .answerText(request.getTranscript())
+                .score(score)
+                .feedbackGood(feedbackGood)
+                .feedbackBad(feedbackBad)
+                .sampleAnswer(sampleAnswer)
                 .damageDealt(attackResult.damageDealt())
                 .damageTaken(damageTaken)
                 .isCritical(attackResult.isCritical())
@@ -140,7 +155,7 @@ public class BattleService {
         return BattleTurnResponse.builder()
                 .turnNumber(turnNumber)
                 .action(action)
-                .score(request.getScore())
+                .score(score)
                 .damageDealt(attackResult.damageDealt())
                 .damageTaken(damageTaken)
                 .isCritical(attackResult.isCritical())
@@ -148,6 +163,9 @@ public class BattleService {
                 .characterCurrentHp(battle.getCurrentCharacterHp())
                 .battleEnded(false)
                 .nextQuestion(BattleStartResponse.QuestionDto.from(nextQuestion))
+                .feedbackGood(feedbackGood)
+                .feedbackBad(feedbackBad)
+                .sampleAnswer(sampleAnswer)
                 .build();
     }
 
