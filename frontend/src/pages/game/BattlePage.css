@@ -90,9 +90,10 @@
 }
 
 .battle-character-sprite {
-  font-size: 72px;
-  text-align: center;
-  filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.3));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.4));
 }
 
 .battle-vs {
@@ -220,6 +221,56 @@
   font-size: 14px;
   color: #aaa;
   line-height: 1.8;
+}
+
+.battle-scoring {
+  margin-top: 8px;
+  color: #f0c040;
+  font-size: 13px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.battle-action-btn.hint-active {
+  border-color: #f0c04066;
+  color: #f0c040;
+  background: rgba(240, 192, 64, 0.08);
+}
+
+.battle-feedback-ai {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #333;
+  text-align: left;
+  max-width: 360px;
+  width: 100%;
+}
+
+.battle-feedback-good {
+  color: #4ade80;
+  font-size: 13px;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.battle-feedback-bad {
+  color: #fbbf24;
+  font-size: 13px;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.battle-feedback-sample {
+  color: #94a3b8;
+  font-size: 12px;
+  font-style: italic;
+  line-height: 1.5;
+  padding: 6px 10px;
+  border-left: 2px solid #475569;
 }
 
 .battle-result-overlay {

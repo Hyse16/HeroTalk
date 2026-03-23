@@ -16,9 +16,13 @@ public class BattleTurnResponse {
     private boolean isCritical;
     private int monsterCurrentHp;
     private int characterCurrentHp;
-    private boolean battleEnded;       // Lombok @Getter → isBattleEnded() (primitive boolean)
-    private BattleResult result;       // null if not ended
-    private Integer expGained;         // null if not ended
-    private Integer goldGained;        // null if not ended
-    private BattleStartResponse.QuestionDto nextQuestion;  // null if ended
+    private boolean battleEnded;
+    private BattleResult result;
+    private Integer expGained;
+    private Integer goldGained;
+    private BattleStartResponse.QuestionDto nextQuestion;
+    // Gemini 채점 피드백 (ATTACK 시에만)
+    private String feedbackGood;
+    private String feedbackBad;
+    private String sampleAnswer;
 }
