@@ -446,7 +446,7 @@ export default class TownScene extends Phaser.Scene {
   // ── 힌트 텍스트 ──────────────────────────────────────────────────────────
   _createHints() {
     const W = this.scale.width
-    this.add.text(W / 2, 20, 'WASD / 방향키rmfjsep zoflr 이동   |   던전 입구에서 Enter', {
+    this.add.text(W / 2, 20, 'WASD / 방향키로 이동   |   Space 점프   |   던전 입구에서 Enter', {
       fontSize: '13px', color: '#606880', fontFamily: 'monospace',
     }).setOrigin(0.5)
 
@@ -466,7 +466,10 @@ export default class TownScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D,
     })
     this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER)
+    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
     this.npcDialogShown = false
+    this._isJumping = false
+    this._groundY = null
   }
 
   update() {
@@ -484,11 +487,27 @@ export default class TownScene extends Phaser.Scene {
     if (up)         body.setVelocityY(-speed)
     else if (down)  body.setVelocityY(speed)
 
-    // 지면 범위 클램핑 — 하늘/땅 아래로 벗어나지 않도록
-    const minY = this._GY - 20
-    const maxY = this._GY + 30
-    if (this.player.y < minY) this.player.y = minY
-    if (this.player.y > maxY) this.player.y = maxY
+    // 점프
+    if (Phaser.Input.Keyboard.JustDown(this.spaceKey) && !this._isJumping) {
+      this._isJumping = true
+      if (this._groundY === null) this._groundY = this.player.y
+      this.tweens.add({
+        targets: this.player,
+        y: this._groundY - 80,
+        duration: 280,
+        ease: 'Sine.easeOut',
+        yoyo: true,
+        onComplete: () => { this._isJumping = false }
+      })
+    }
+
+    // 지면 범위 클램핑 — 점프 중이 아닐 때만
+    if (!this._isJumping) {
+      const minY = this._GY - 20
+      const maxY = this._GY + 30
+      if (this.player.y < minY) this.player.y = minY
+      if (this.player.y > maxY) this.player.y = maxY
+    }
 
     this.playerLabel.setPosition(this.player.x, this.player.y - 85)
 
