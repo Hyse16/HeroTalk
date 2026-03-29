@@ -35,4 +35,33 @@ public class UserStreak {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // ── 도메인 메서드 ──
+
+    /** 오늘 체크인 여부 */
+    public boolean isCheckedInToday() {
+        return lastLoginDate != null && lastLoginDate.equals(LocalDate.now());
+    }
+
+    /** 체크인 (스트릭 업데이트) */
+    public void checkIn() {
+        LocalDate today = LocalDate.now();
+        if (isCheckedInToday()) return;
+        if (lastLoginDate != null && lastLoginDate.equals(today.minusDays(1))) {
+            this.currentStreak++;
+        } else {
+            this.currentStreak = 1;
+        }
+        this.maxStreak = Math.max(this.maxStreak, this.currentStreak);
+        this.lastLoginDate = today;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /** XP 배율 반환 (1일→1.1, 3일→1.3, 7일→1.5) */
+    public double getExpMultiplier() {
+        if (currentStreak >= 7)  return 1.5;
+        if (currentStreak >= 3)  return 1.3;
+        if (currentStreak >= 1)  return 1.1;
+        return 1.0;
+    }
 }

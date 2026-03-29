@@ -6,6 +6,12 @@ import org.herotalk.domain.dungeon.entity.Dungeon;
 import org.herotalk.domain.dungeon.entity.Monster;
 import org.herotalk.domain.dungeon.repository.DungeonRepository;
 import org.herotalk.domain.dungeon.repository.MonsterRepository;
+import org.herotalk.domain.item.entity.Cosmetic;
+import org.herotalk.domain.item.entity.Item;
+import org.herotalk.domain.item.repository.CosmeticRepository;
+import org.herotalk.domain.item.repository.ItemRepository;
+import org.herotalk.domain.quest.entity.DailyQuest;
+import org.herotalk.domain.quest.repository.DailyQuestRepository;
 import org.herotalk.domain.question.entity.Question;
 import org.herotalk.domain.question.repository.QuestionRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -22,6 +28,9 @@ public class DataInitializer implements CommandLineRunner {
     private final DungeonRepository dungeonRepository;
     private final MonsterRepository monsterRepository;
     private final QuestionRepository questionRepository;
+    private final ItemRepository itemRepository;
+    private final CosmeticRepository cosmeticRepository;
+    private final DailyQuestRepository dailyQuestRepository;
 
     @Override
     @Transactional
@@ -35,6 +44,9 @@ public class DataInitializer implements CommandLineRunner {
         List<Dungeon> dungeons = seedDungeons();
         seedMonsters(dungeons);
         seedQuestions();
+        seedItems();
+        seedCosmetics();
+        seedDailyQuests();
         log.info("[DataInitializer] 시드 데이터 삽입 완료.");
     }
 
@@ -441,6 +453,40 @@ public class DataInitializer implements CommandLineRunner {
                     "Overall, I believe social media is a powerful tool that requires thoughtful use and regulation " +
                     "to maximize its benefits while minimizing its harms.")
                 .build()
+        ));
+    }
+
+    private void seedItems() {
+        itemRepository.saveAll(List.of(
+            Item.builder().name("HP 포션").description("HP를 50 회복합니다.").itemType(Item.ItemType.HP_POTION).effectValue(50).price(30).build(),
+            Item.builder().name("XP 부스터").description("다음 배틀 경험치 150% 획득.").itemType(Item.ItemType.XP_BOOSTER).effectValue(150).price(80).build(),
+            Item.builder().name("시간 연장권").description("답변 시간 15초 추가.").itemType(Item.ItemType.TIME_EXTEND).effectValue(15).price(50).build(),
+            Item.builder().name("재도전권").description("패배 시 1회 재도전.").itemType(Item.ItemType.RETRY).effectValue(1).price(60).build(),
+            Item.builder().name("힌트 강화권").description("힌트 데미지 패널티 제거.").itemType(Item.ItemType.HINT_BOOST).effectValue(1).price(40).build()
+        ));
+    }
+
+    private void seedCosmetics() {
+        cosmeticRepository.saveAll(List.of(
+            Cosmetic.builder().name("견습생 로브").cosmeticType(Cosmetic.CosmeticType.COSTUME).description("초보 모험가의 기본 로브.").price(100).rarity(Cosmetic.Rarity.COMMON).build(),
+            Cosmetic.builder().name("모험가 갑옷").cosmeticType(Cosmetic.CosmeticType.COSTUME).description("경험 많은 모험가의 갑옷.").price(300).rarity(Cosmetic.Rarity.RARE).build(),
+            Cosmetic.builder().name("기사단 풀갑옷").cosmeticType(Cosmetic.CosmeticType.COSTUME).description("왕국 기사단의 정식 갑옷.").price(800).rarity(Cosmetic.Rarity.EPIC).build(),
+            Cosmetic.builder().name("드래곤 슬레이어").cosmeticType(Cosmetic.CosmeticType.COSTUME).description("드래곤을 물리친 영웅의 갑옷.").price(2000).rarity(Cosmetic.Rarity.LEGENDARY).build(),
+            Cosmetic.builder().name("다크 나이트").cosmeticType(Cosmetic.CosmeticType.COSTUME).description("어둠의 기사 코스튬.").price(2500).rarity(Cosmetic.Rarity.LEGENDARY).build(),
+            Cosmetic.builder().name("낡은 검").cosmeticType(Cosmetic.CosmeticType.WEAPON).description("녹슨 낡은 검.").price(150).rarity(Cosmetic.Rarity.COMMON).build(),
+            Cosmetic.builder().name("강철 활").cosmeticType(Cosmetic.CosmeticType.WEAPON).description("정밀하게 제작된 강철 활.").price(400).rarity(Cosmetic.Rarity.RARE).build(),
+            Cosmetic.builder().name("마법 지팡이").cosmeticType(Cosmetic.CosmeticType.WEAPON).description("마력이 깃든 지팡이.").price(1000).rarity(Cosmetic.Rarity.EPIC).build(),
+            Cosmetic.builder().name("전설의 대검").cosmeticType(Cosmetic.CosmeticType.WEAPON).description("전설 속 영웅의 대검.").price(2200).rarity(Cosmetic.Rarity.LEGENDARY).build()
+        ));
+    }
+
+    private void seedDailyQuests() {
+        dailyQuestRepository.saveAll(List.of(
+            DailyQuest.builder().name("몬스터 사냥꾼").description("몬스터 3마리를 처치하세요.").questType(DailyQuest.QuestType.KILL).targetValue(3).expReward(100).goldReward(50).build(),
+            DailyQuest.builder().name("크리티컬 마스터").description("크리티컬 공격을 1회 달성하세요.").questType(DailyQuest.QuestType.CRITICAL).targetValue(1).expReward(100).goldReward(50).build(),
+            DailyQuest.builder().name("복습 달인").description("복습 던전을 1회 클리어하세요.").questType(DailyQuest.QuestType.REVIEW).targetValue(1).expReward(100).goldReward(50).build(),
+            DailyQuest.builder().name("Part1 훈련").description("Part1 문제를 2개 풀어보세요.").questType(DailyQuest.QuestType.PART_CLEAR).targetValue(2).expReward(100).goldReward(50).build(),
+            DailyQuest.builder().name("Part2 훈련").description("Part2 문제를 2개 풀어보세요.").questType(DailyQuest.QuestType.PART_CLEAR).targetValue(2).expReward(100).goldReward(50).build()
         ));
     }
 }

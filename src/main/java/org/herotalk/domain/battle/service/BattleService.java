@@ -18,6 +18,7 @@ import org.herotalk.domain.dungeon.repository.MonsterRepository;
 import org.herotalk.domain.question.entity.Question;
 import org.herotalk.domain.question.entity.QuestionHistory;
 import org.herotalk.domain.question.repository.QuestionHistoryRepository;
+import org.herotalk.domain.ranking.service.RankingService;
 import org.herotalk.domain.review.entity.ReviewQuestion;
 import org.herotalk.domain.review.repository.ReviewQuestionRepository;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ public class BattleService {
     private final ReviewQuestionRepository reviewQuestionRepository;
     private final QuestionHistoryRepository questionHistoryRepository;
     private final GeminiService geminiService;
+    private final RankingService rankingService;
 
     @Transactional
     public BattleStartResponse startBattle(Long userId, Long monsterId) {
@@ -194,6 +196,10 @@ public class BattleService {
         character.addExp(expGained);
         character.addGold(goldGained);
         boolean leveledUp = character.getLevel() > levelBefore;
+
+        if (monsterDead && expGained > 0) {
+            rankingService.addScore(character.getUser().getId(), expGained);
+        }
 
         int totalTurns = battleTurnRepository.countByBattleId(battle.getId());
         battle.finish(result, totalTurns, expGained, goldGained);

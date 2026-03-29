@@ -45,4 +45,10 @@ public class ReviewQuestion extends BaseTimeEntity {
 
     @Column(name = "cleared_at")
     private LocalDateTime clearedAt;
+
+    public void markCleared(int score) {
+        this.reviewScore = score;
+        this.isCleared = true;
+        this.clearedAt = LocalDateTime.now();
+    }
 }

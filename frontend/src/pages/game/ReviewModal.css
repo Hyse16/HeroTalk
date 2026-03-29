@@ -1,0 +1,342 @@
+.rev-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.rev-panel {
+  background: #12181f;
+  border: 1px solid #4a3a1a;
+  border-radius: 12px;
+  padding: 28px 32px;
+  width: 660px;
+  max-height: 84vh;
+  overflow-y: auto;
+  color: #e8d5a3;
+  font-family: monospace;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+/* ── 타이틀 ── */
+.rev-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #f0c040;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+/* ── 알림 ── */
+.rev-error {
+  color: #f87171;
+  font-size: 13px;
+  padding: 8px 12px;
+  background: rgba(248, 113, 113, 0.08);
+  border-radius: 6px;
+}
+
+.rev-loading,
+.rev-empty {
+  text-align: center;
+  color: #aaa;
+  padding: 28px;
+  line-height: 1.6;
+}
+
+/* ── 문제 목록 ── */
+.rev-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rev-card {
+  background: #1a2030;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s;
+}
+
+.rev-card:hover {
+  border-color: #555;
+}
+
+.rev-card.cleared {
+  opacity: 0.55;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.rev-card.active {
+  border-color: #f0c040;
+  background: #1e2618;
+}
+
+/* ── 카드 헤더 ── */
+.rev-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rev-part-badge {
+  font-size: 11px;
+  font-weight: bold;
+  background: #2a3050;
+  color: #93c5fd;
+  border: 1px solid rgba(147, 197, 253, 0.3);
+  border-radius: 4px;
+  padding: 2px 8px;
+  letter-spacing: 1px;
+}
+
+.rev-original-score {
+  font-size: 12px;
+  color: #f87171;
+}
+
+.rev-cleared-badge {
+  font-size: 12px;
+  color: #4ade80;
+  margin-left: auto;
+}
+
+/* ── 문제 텍스트 ── */
+.rev-question-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #e8d5a3;
+}
+
+.rev-hint {
+  font-size: 13px;
+  color: #f0c040;
+  background: rgba(240, 192, 64, 0.07);
+  border-left: 3px solid #f0c040;
+  padding: 6px 10px;
+  border-radius: 0 4px 4px 0;
+}
+
+/* ── 녹음 UI ── */
+.rev-recording {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rev-rec-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #f87171;
+  font-weight: bold;
+}
+
+.rev-rec-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f87171;
+  animation: rev-blink 0.9s ease-in-out infinite;
+}
+
+@keyframes rev-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.rev-countdown {
+  font-size: 28px;
+  font-weight: bold;
+  color: #f0c040;
+  text-align: center;
+}
+
+.rev-transcript {
+  font-size: 13px;
+  color: #b0a080;
+  background: #0e1418;
+  border-radius: 4px;
+  padding: 8px 12px;
+  min-height: 32px;
+  font-style: italic;
+}
+
+/* ── 버튼 공통 ── */
+.rev-btn {
+  padding: 9px 22px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: bold;
+  transition: background 0.15s;
+}
+
+.rev-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rev-btn-start {
+  background: #d4a017;
+  color: #12181f;
+  align-self: flex-start;
+}
+
+.rev-btn-start:hover:not(:disabled) {
+  background: #f0c040;
+}
+
+.rev-btn-stop {
+  background: #7c2d2d;
+  color: #fca5a5;
+  align-self: flex-start;
+}
+
+.rev-btn-stop:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.rev-btn-ok {
+  background: #d4a017;
+  color: #12181f;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.rev-btn-ok:hover {
+  background: #f0c040;
+}
+
+.rev-btn-close {
+  background: #333;
+  color: #aaa;
+}
+
+.rev-btn-close:hover {
+  background: #444;
+}
+
+/* ── 채점 결과 박스 ── */
+.rev-result-box {
+  background: #0e1820;
+  border: 1px solid #4a3a1a;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rev-result-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #f0c040;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.rev-result-score {
+  text-align: center;
+}
+
+.rev-result-score-val {
+  font-size: 48px;
+  font-weight: bold;
+  color: #f0c040;
+}
+
+.rev-result-score-label {
+  font-size: 18px;
+  color: #aaa;
+  margin-left: 4px;
+}
+
+/* ── 점수 바 ── */
+.rev-score-bar-wrap {
+  height: 8px;
+  background: #2a2a2a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rev-score-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.rev-result-cleared {
+  text-align: center;
+  font-size: 15px;
+  color: #4ade80;
+  font-weight: bold;
+}
+
+.rev-result-exp {
+  text-align: center;
+  font-size: 14px;
+  color: #a78bfa;
+  font-weight: bold;
+}
+
+.rev-result-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rev-result-label {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.rev-result-label.rev-good {
+  color: #4ade80;
+}
+
+.rev-result-label.rev-bad {
+  color: #f87171;
+}
+
+.rev-result-label.rev-sample {
+  color: #93c5fd;
+}
+
+.rev-result-text {
+  font-size: 13px;
+  color: #b0a080;
+  line-height: 1.6;
+  background: #1a2030;
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+.rev-result-text.rev-sample-text {
+  color: #93c5fd;
+  font-style: italic;
+}
+
+/* ── 하단 버튼 ── */
+.rev-actions {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #2a2a2a;
+  padding-top: 12px;
+}

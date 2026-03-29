@@ -6,45 +6,69 @@ import EventBus from '@/game/EventBus'
 import useAuthStore from '@/store/authStore'
 import useCharacterStore from '@/store/characterStore'
 import { getCharacter } from '@/api/characterApi'
+import { checkIn as streakCheckIn, getStreak } from '@/api/streakApi'
 import DungeonSelectModal from './game/DungeonSelectModal'
 import StatAllocateModal from './game/StatAllocateModal'
+import ShopModal from './game/ShopModal'
+import ReviewModal from './game/ReviewModal'
+import RankingModal from './game/RankingModal'
+import QuestModal from './game/QuestModal'
+import StreakBadge from '@/components/StreakBadge'
 
-const JOB_ICON = { WARRIOR: '⚔️', MAGE: '🔮', KNIGHT: '🛡️', RANGER: '🏹' }
+const JOB_ICON  = { WARRIOR: '⚔️', MAGE: '🔮', KNIGHT: '🛡️', RANGER: '🏹' }
 const JOB_COLOR = { WARRIOR: '#60a5fa', MAGE: '#a78bfa', KNIGHT: '#d1d5db', RANGER: '#86efac' }
+
+const BTN = {
+  base: {
+    padding: '7px 14px',
+    background: 'rgba(10,10,25,0.80)',
+    color: '#c0cce0',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: 6, cursor: 'pointer',
+    fontSize: 13, fontFamily: 'monospace',
+    zIndex: 9999,
+  },
+}
 
 function GamePage() {
   const gameRef      = useRef(null)
   const containerRef = useRef(null)
-  const charRef      = useRef(null)   // 최신 캐릭터 데이터를 ref에도 보관
+  const charRef      = useRef(null)
   const navigate     = useNavigate()
   const logout       = useAuthStore((state) => state.logout)
   const character    = useCharacterStore((state) => state.character)
   const setCharacter = useCharacterStore((state) => state.setCharacter)
-  const [showDungeonModal, setShowDungeonModal] = useState(false)
-  const [showStatModal, setShowStatModal] = useState(false)
 
-  // 캐릭터 로드 → store + ref + EventBus 전달
+  const [showDungeonModal, setShowDungeonModal] = useState(false)
+  const [showStatModal,    setShowStatModal]    = useState(false)
+  const [showShopModal,    setShowShopModal]    = useState(false)
+  const [showReviewModal,  setShowReviewModal]  = useState(false)
+  const [showRankingModal, setShowRankingModal] = useState(false)
+  const [showQuestModal,   setShowQuestModal]   = useState(false)
+  const [streak,           setStreak]           = useState(null)
+
+  // 캐릭터 로드 + 스트릭 체크인
   useEffect(() => {
     getCharacter()
       .then((char) => {
         setCharacter(char)
         charRef.current = char
         EventBus.emit('character-loaded', {
-          job:    char.job,
-          gender: char.gender,
-          name:   char.name,
-          level:  char.level,
+          job: char.job, gender: char.gender, name: char.name, level: char.level,
         })
       })
       .catch(() => navigate('/character/create', { replace: true }))
+
+    streakCheckIn()
+      .then(setStreak)
+      .catch(() => getStreak().then(setStreak).catch(() => {}))
   }, [setCharacter, navigate])
 
-  // Phaser 초기화 + EventBus 리스너를 단일 useEffect로 묶어 race condition 방지
+  // Phaser 초기화
   useEffect(() => {
     const dungeonHandler = () => setShowDungeonModal(true)
     EventBus.on('dungeon-enter', dungeonHandler)
 
-    // TownScene이 준비되면 캐릭터 데이터를 다시 전달 (타이밍 역전 대비)
     const sceneReadyHandler = () => {
       if (charRef.current) {
         const c = charRef.current
@@ -56,10 +80,7 @@ function GamePage() {
     EventBus.on('scene-ready', sceneReadyHandler)
 
     if (!gameRef.current) {
-      gameRef.current = new Phaser.Game({
-        ...GameConfig,
-        parent: containerRef.current,
-      })
+      gameRef.current = new Phaser.Game({ ...GameConfig, parent: containerRef.current })
     }
 
     return () => {
@@ -70,10 +91,7 @@ function GamePage() {
     }
   }, [])
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+  const handleLogout = () => { logout(); navigate('/login') }
 
   const job        = character?.job        || 'WARRIOR'
   const level      = character?.level      || 1
@@ -82,7 +100,6 @@ function GamePage() {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#0d0d1a' }}>
-      {/* Phaser 캔버스 */}
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 
       {/* ── 캐릭터 HUD (좌하단) ── */}
@@ -94,9 +111,7 @@ function GamePage() {
           border: `1px solid ${JOB_COLOR[job]}44`,
           borderRadius: 10, padding: '10px 16px',
           boxShadow: `0 0 18px ${JOB_COLOR[job]}33`,
-          zIndex: 9999,
-          fontFamily: 'monospace',
-          pointerEvents: 'auto',
+          zIndex: 9999, fontFamily: 'monospace', pointerEvents: 'auto',
         }}>
           <div style={{ fontSize: 28 }}>{JOB_ICON[job]}</div>
           <div>
@@ -105,28 +120,19 @@ function GamePage() {
             </div>
             <div style={{ color: '#8090b0', fontSize: 11 }}>
               Lv.{level} &nbsp;·&nbsp; {job}
+              {character.gold != null && <span style={{ marginLeft: 8, color: '#f0c040' }}>💰{character.gold}G</span>}
             </div>
+            <StreakBadge streak={streak} />
           </div>
           {statPoints > 0 && (
-            <button
-              onClick={() => setShowStatModal(true)}
-              style={{
-                pointerEvents: 'all',
-                marginLeft: 8,
-                padding: '4px 10px',
-                background: 'linear-gradient(135deg, #7c3aed, #4c1d95)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 6,
-                fontSize: 12,
-                fontFamily: 'monospace',
-                cursor: 'pointer',
-                boxShadow: '0 0 10px rgba(124,58,237,0.7)',
-                animation: 'stat-pulse 1.2s ease-in-out infinite alternate',
-              }}
-            >
-              ⬆ +{statPoints}
-            </button>
+            <button onClick={() => setShowStatModal(true)} style={{
+              marginLeft: 8, padding: '4px 10px',
+              background: 'linear-gradient(135deg, #7c3aed, #4c1d95)',
+              color: '#fff', border: 'none', borderRadius: 6,
+              fontSize: 12, fontFamily: 'monospace', cursor: 'pointer',
+              boxShadow: '0 0 10px rgba(124,58,237,0.7)',
+              animation: 'stat-pulse 1.2s ease-in-out infinite alternate',
+            }}>⬆ +{statPoints}</button>
           )}
         </div>
       )}
@@ -140,40 +146,45 @@ function GamePage() {
         background: 'rgba(0,0,0,0.35)',
         padding: '5px 18px', borderRadius: 6,
         zIndex: 9999, pointerEvents: 'none',
+      }}>🏘️  HeroTalk 마을</div>
+
+      {/* ── 우측 버튼 그룹 ── */}
+      <div style={{
+        position: 'fixed', top: 14, right: 16,
+        display: 'flex', gap: 8, zIndex: 9999, alignItems: 'center',
       }}>
-        🏘️  HeroTalk 마을
+        <button onClick={() => setShowQuestModal(true)}   style={BTN.base}>📋 퀘스트</button>
+        <button onClick={() => setShowReviewModal(true)}  style={BTN.base}>📚 복습</button>
+        <button onClick={() => setShowShopModal(true)}    style={BTN.base}>🛒 상점</button>
+        <button onClick={() => setShowRankingModal(true)} style={BTN.base}>🏆 랭킹</button>
+        <button onClick={handleLogout} style={{ ...BTN.base, color: '#8090a0' }}>로그아웃</button>
       </div>
 
-      {/* ── 로그아웃 버튼 ── */}
-      <button
-        onClick={handleLogout}
-        style={{
-          position: 'fixed', top: 14, right: 16,
-          padding: '7px 16px',
-          background: 'rgba(10,10,25,0.75)',
-          color: '#aaa',
-          border: '1px solid rgba(255,255,255,0.18)',
-          borderRadius: 6, cursor: 'pointer',
-          fontSize: 13, fontFamily: 'monospace',
-          zIndex: 9999,
-        }}
-      >
-        로그아웃
-      </button>
-
-      {showDungeonModal && (
-        <DungeonSelectModal onClose={() => setShowDungeonModal(false)} />
-      )}
+      {/* ── 모달들 ── */}
+      {showDungeonModal && <DungeonSelectModal onClose={() => setShowDungeonModal(false)} />}
 
       {showStatModal && character && (
         <StatAllocateModal
           character={character}
           onClose={() => setShowStatModal(false)}
-          onAllocated={(updated) => {
-            setCharacter(updated)
-            charRef.current = updated
-          }}
+          onAllocated={(updated) => { setCharacter(updated); charRef.current = updated }}
         />
+      )}
+
+      {showShopModal && (
+        <ShopModal onClose={() => setShowShopModal(false)} />
+      )}
+
+      {showReviewModal && (
+        <ReviewModal onClose={() => setShowReviewModal(false)} />
+      )}
+
+      {showRankingModal && (
+        <RankingModal onClose={() => setShowRankingModal(false)} />
+      )}
+
+      {showQuestModal && (
+        <QuestModal onClose={() => setShowQuestModal(false)} />
       )}
     </div>
   )

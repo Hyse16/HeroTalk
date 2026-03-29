@@ -1,0 +1,16 @@
+/ㄴㅅㅁ{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(./gradlew dependencies:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(npm:*)",
+      "Bash(./gradlew compileJava:*)"
+    ]
+  }
+}
