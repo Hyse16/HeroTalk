@@ -25,4 +25,8 @@ public class BattleTurnResponse {
     private String feedbackGood;
     private String feedbackBad;
     private String sampleAnswer;
+    // 레벨업 정보 (배틀 종료 시)
+    private boolean leveledUp;
+    private Integer newLevel;
+    private Integer newStatPoints;
 }

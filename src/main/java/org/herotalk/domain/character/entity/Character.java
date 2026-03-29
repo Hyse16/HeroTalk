@@ -89,6 +89,22 @@ public class Character extends BaseTimeEntity {
             this.statPoints += 3;
             this.expToNext = (long) this.level * 200;
         }
+        this.appearance = calcAppearance(this.level);
+    }
+
+    private int calcAppearance(int level) {
+        if (level <= 5)  return 1;
+        if (level <= 10) return 2;
+        if (level <= 20) return 3;
+        if (level <= 30) return 4;
+        if (level <= 50) return 5;
+        return 6;
+    }
+
+    /** 스탯 포인트 소모 */
+    public void useStatPoints(int amount) {
+        if (this.statPoints < amount) throw new IllegalArgumentException("스탯 포인트가 부족합니다");
+        this.statPoints -= amount;
     }
 
     /** 데미지 적용 → 남은 HP 반환 (최솟값 0) */

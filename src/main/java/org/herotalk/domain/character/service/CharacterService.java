@@ -44,6 +44,24 @@ public class CharacterService {
         return CharacterResponse.from(savedCharacter, savedStats);
     }
 
+    @Transactional
+    public CharacterResponse allocateStat(Long userId, String statName, int amount) {
+        Character character = characterRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalStateException("캐릭터를 찾을 수 없습니다"));
+
+        if (character.getStatPoints() < amount) {
+            throw new IllegalArgumentException("스탯 포인트가 부족합니다");
+        }
+
+        CharacterStats stats = characterStatsRepository.findByCharacterId(character.getId())
+                .orElseThrow(() -> new IllegalStateException("캐릭터 스탯을 찾을 수 없습니다"));
+
+        stats.addStat(statName, amount);
+        character.useStatPoints(amount);
+
+        return CharacterResponse.from(character, stats);
+    }
+
     @Transactional(readOnly = true)
     public CharacterResponse getCharacter(Long userId) {
         Character character = characterRepository.findByUserId(userId)

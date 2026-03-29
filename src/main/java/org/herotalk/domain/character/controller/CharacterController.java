@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.herotalk.domain.character.dto.CharacterCreateRequest;
 import org.herotalk.domain.character.dto.CharacterResponse;
+import org.herotalk.domain.character.dto.StatAllocateRequest;
 import org.herotalk.domain.character.service.CharacterService;
 import org.herotalk.global.response.ApiResponse;
 import org.herotalk.security.CustomUserDetails;
@@ -31,6 +32,15 @@ public class CharacterController {
     public ResponseEntity<ApiResponse<CharacterResponse>> getCharacter(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         CharacterResponse response = characterService.getCharacter(userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @PatchMapping("/me/stats")
+    public ResponseEntity<ApiResponse<CharacterResponse>> allocateStat(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody StatAllocateRequest request) {
+        CharacterResponse response = characterService.allocateStat(
+                userDetails.getUserId(), request.getStatName(), request.getAmount());
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }

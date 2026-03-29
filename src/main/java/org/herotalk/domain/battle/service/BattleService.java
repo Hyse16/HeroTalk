@@ -190,8 +190,10 @@ public class BattleService {
             goldGained = 0;
         }
 
+        int levelBefore = character.getLevel();
         character.addExp(expGained);
         character.addGold(goldGained);
+        boolean leveledUp = character.getLevel() > levelBefore;
 
         int totalTurns = battleTurnRepository.countByBattleId(battle.getId());
         battle.finish(result, totalTurns, expGained, goldGained);
@@ -209,6 +211,9 @@ public class BattleService {
                 .result(result)
                 .expGained(expGained)
                 .goldGained(goldGained)
+                .leveledUp(leveledUp)
+                .newLevel(character.getLevel())
+                .newStatPoints(character.getStatPoints())
                 .build();
     }
 

@@ -7,6 +7,7 @@ import useAuthStore from '@/store/authStore'
 import useCharacterStore from '@/store/characterStore'
 import { getCharacter } from '@/api/characterApi'
 import DungeonSelectModal from './game/DungeonSelectModal'
+import StatAllocateModal from './game/StatAllocateModal'
 
 const JOB_ICON = { WARRIOR: '⚔️', MAGE: '🔮', KNIGHT: '🛡️', RANGER: '🏹' }
 const JOB_COLOR = { WARRIOR: '#60a5fa', MAGE: '#a78bfa', KNIGHT: '#d1d5db', RANGER: '#86efac' }
@@ -20,6 +21,7 @@ function GamePage() {
   const character    = useCharacterStore((state) => state.character)
   const setCharacter = useCharacterStore((state) => state.setCharacter)
   const [showDungeonModal, setShowDungeonModal] = useState(false)
+  const [showStatModal, setShowStatModal] = useState(false)
 
   // 캐릭터 로드 → store + ref + EventBus 전달
   useEffect(() => {
@@ -73,9 +75,10 @@ function GamePage() {
     navigate('/login')
   }
 
-  const job   = character?.job   || 'WARRIOR'
-  const level = character?.level || 1
-  const name  = character?.name  || ''
+  const job        = character?.job        || 'WARRIOR'
+  const level      = character?.level      || 1
+  const name       = character?.name       || ''
+  const statPoints = character?.statPoints || 0
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#0d0d1a' }}>
@@ -93,7 +96,7 @@ function GamePage() {
           boxShadow: `0 0 18px ${JOB_COLOR[job]}33`,
           zIndex: 9999,
           fontFamily: 'monospace',
-          pointerEvents: 'none',
+          pointerEvents: 'auto',
         }}>
           <div style={{ fontSize: 28 }}>{JOB_ICON[job]}</div>
           <div>
@@ -104,6 +107,27 @@ function GamePage() {
               Lv.{level} &nbsp;·&nbsp; {job}
             </div>
           </div>
+          {statPoints > 0 && (
+            <button
+              onClick={() => setShowStatModal(true)}
+              style={{
+                pointerEvents: 'all',
+                marginLeft: 8,
+                padding: '4px 10px',
+                background: 'linear-gradient(135deg, #7c3aed, #4c1d95)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                fontSize: 12,
+                fontFamily: 'monospace',
+                cursor: 'pointer',
+                boxShadow: '0 0 10px rgba(124,58,237,0.7)',
+                animation: 'stat-pulse 1.2s ease-in-out infinite alternate',
+              }}
+            >
+              ⬆ +{statPoints}
+            </button>
+          )}
         </div>
       )}
 
@@ -139,6 +163,17 @@ function GamePage() {
 
       {showDungeonModal && (
         <DungeonSelectModal onClose={() => setShowDungeonModal(false)} />
+      )}
+
+      {showStatModal && character && (
+        <StatAllocateModal
+          character={character}
+          onClose={() => setShowStatModal(false)}
+          onAllocated={(updated) => {
+            setCharacter(updated)
+            charRef.current = updated
+          }}
+        />
       )}
     </div>
   )

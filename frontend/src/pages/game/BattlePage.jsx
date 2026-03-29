@@ -219,6 +219,9 @@ export default function BattlePage() {
           type: turnResult.result,
           expGained: turnResult.expGained,
           goldGained: turnResult.goldGained,
+          leveledUp: turnResult.leveledUp,
+          newLevel: turnResult.newLevel,
+          newStatPoints: turnResult.newStatPoints,
         })
       } else if (turnResult.nextQuestion) {
         setCurrentQuestion(turnResult.nextQuestion)
@@ -400,6 +403,14 @@ export default function BattlePage() {
             <div className="battle-result-stats">
               {result.expGained > 0 && <div>경험치 +{result.expGained} EXP</div>}
               {result.goldGained > 0 && <div>골드 +{result.goldGained} G</div>}
+              {result.leveledUp && (
+                <div className="battle-levelup">
+                  🎉 레벨업! Lv.{result.newLevel}
+                  {result.newStatPoints > 0 && (
+                    <span className="battle-statpoints"> (스탯 포인트 +3)</span>
+                  )}
+                </div>
+              )}
             </div>
             <button
               className="battle-result-btn"

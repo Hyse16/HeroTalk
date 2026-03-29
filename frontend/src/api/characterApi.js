@@ -8,5 +8,9 @@ export async function createCharacter(name, job, gender) {
 export async function getCharacter() {
   const res = await api.get('/characters/me')
   return res.data.data
-  // Returns: { id, name, job, gender, level, exp, gold, maxHp, ... }
+}
+
+export async function allocateStat(statName, amount) {
+  const res = await api.patch('/characters/me/stats', { statName, amount })
+  return res.data.data
 }

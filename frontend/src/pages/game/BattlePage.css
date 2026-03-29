@@ -346,3 +346,23 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.2; }
 }
+
+.battle-levelup {
+  margin-top: 10px;
+  color: #f0c040;
+  font-size: 18px;
+  font-weight: bold;
+  text-shadow: 0 0 12px rgba(240,192,64,0.8);
+  animation: levelup-glow 0.8s ease-in-out infinite alternate;
+}
+
+.battle-statpoints {
+  color: #a78bfa;
+  font-size: 13px;
+  margin-left: 6px;
+}
+
+@keyframes levelup-glow {
+  from { text-shadow: 0 0 8px rgba(240,192,64,0.6); }
+  to   { text-shadow: 0 0 20px rgba(240,192,64,1), 0 0 40px rgba(240,192,64,0.4); }
+}
