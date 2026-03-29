@@ -8,7 +8,9 @@ import org.herotalk.domain.auth.dto.SignupRequest;
 import org.herotalk.domain.auth.dto.TokenRefreshRequest;
 import org.herotalk.domain.auth.service.AuthService;
 import org.herotalk.global.response.ApiResponse;
+import org.herotalk.security.CustomUserDetails;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,5 +39,12 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody TokenRefreshRequest request) {
         AuthResponse response = authService.refresh(request);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        authService.logout(userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.herotalk.domain.character.repository.CharacterRepository;
 import org.herotalk.domain.user.repository.UserRepository;
 import org.herotalk.security.jwt.JwtProvider;
+import org.herotalk.security.jwt.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -22,6 +23,7 @@ import java.io.IOException;
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final JwtProvider jwtProvider;
+    private final RefreshTokenService refreshTokenService;
     private final UserRepository userRepository;
     private final CharacterRepository characterRepository;
 
@@ -42,6 +44,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         String accessToken  = jwtProvider.generateAccessToken(userId, email);
         String refreshToken = jwtProvider.generateRefreshToken(userId);
+        refreshTokenService.save(userId, refreshToken);
 
         boolean hasCharacter = characterRepository.findByUserId(userId).isPresent();
 

@@ -10,6 +10,7 @@ import org.herotalk.domain.user.entity.UserStreak;
 import org.herotalk.domain.user.repository.UserRepository;
 import org.herotalk.domain.user.repository.UserStreakRepository;
 import org.herotalk.security.jwt.JwtProvider;
+import org.herotalk.security.jwt.RefreshTokenService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class AuthService {
     private final UserStreakRepository userStreakRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public AuthResponse signup(SignupRequest request) {
@@ -41,6 +43,7 @@ public class AuthService {
 
         String accessToken = jwtProvider.generateAccessToken(savedUser.getId(), savedUser.getEmail());
         String refreshToken = jwtProvider.generateRefreshToken(savedUser.getId());
+        refreshTokenService.save(savedUser.getId(), refreshToken);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -64,6 +67,7 @@ public class AuthService {
 
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtProvider.generateRefreshToken(user.getId());
+        refreshTokenService.save(user.getId(), refreshToken);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -74,7 +78,7 @@ public class AuthService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse refresh(TokenRefreshRequest request) {
         String refreshToken = request.getRefreshToken();
 
@@ -83,17 +87,28 @@ public class AuthService {
         }
 
         Long userId = jwtProvider.getUserIdFromToken(refreshToken);
+
+        if (!refreshTokenService.validate(userId, refreshToken)) {
+            throw new IllegalArgumentException("만료되거나 이미 사용된 refresh token입니다");
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다"));
 
-        String newAccessToken = jwtProvider.generateAccessToken(user.getId(), user.getEmail());
+        String newAccessToken  = jwtProvider.generateAccessToken(user.getId(), user.getEmail());
+        String newRefreshToken = jwtProvider.generateRefreshToken(user.getId());
+        refreshTokenService.save(user.getId(), newRefreshToken);
 
         return AuthResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(newRefreshToken)
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .newUser(false)
                 .build();
+    }
+
+    public void logout(Long userId) {
+        refreshTokenService.delete(userId);
     }
 }

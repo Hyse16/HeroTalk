@@ -70,6 +70,15 @@ public class JwtProvider {
         }
     }
 
+    public boolean isAccessToken(String token) {
+        try {
+            Claims claims = parseClaims(token);
+            return "access".equals(claims.get("type", String.class));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public Long getUserIdFromToken(String token) {
         Claims claims = parseClaims(token);
         return Long.parseLong(claims.getSubject());
