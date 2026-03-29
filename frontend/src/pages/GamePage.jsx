@@ -14,6 +14,7 @@ import ReviewModal from './game/ReviewModal'
 import RankingModal from './game/RankingModal'
 import QuestModal from './game/QuestModal'
 import StreakBadge from '@/components/StreakBadge'
+import TutorialOverlay, { isTutorialDone } from './game/TutorialOverlay'
 
 const JOB_ICON  = { WARRIOR: '⚔️', MAGE: '🔮', KNIGHT: '🛡️', RANGER: '🏹' }
 const JOB_COLOR = { WARRIOR: '#60a5fa', MAGE: '#a78bfa', KNIGHT: '#d1d5db', RANGER: '#86efac' }
@@ -39,6 +40,7 @@ function GamePage() {
   const character    = useCharacterStore((state) => state.character)
   const setCharacter = useCharacterStore((state) => state.setCharacter)
 
+  const [showTutorial,     setShowTutorial]     = useState(!isTutorialDone())
   const [showDungeonModal, setShowDungeonModal] = useState(false)
   const [showStatModal,    setShowStatModal]    = useState(false)
   const [showShopModal,    setShowShopModal]    = useState(false)
@@ -185,6 +187,10 @@ function GamePage() {
 
       {showQuestModal && (
         <QuestModal onClose={() => setShowQuestModal(false)} />
+      )}
+
+      {showTutorial && (
+        <TutorialOverlay onClose={() => setShowTutorial(false)} />
       )}
     </div>
   )
