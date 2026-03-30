@@ -43,6 +43,7 @@ src/main/java/org/herotalk/
   domain/character/     → Character, CharacterStats entity + repository + service + controller
   domain/auth/          → AuthService, AuthController, dto
   domain/{battle,dungeon,question,item,achievement,quest,review}/  → Entity만 존재
+  domain/admin/             → AdminXxxController (어드민 CRUD API)
 src/main/generated/     → QueryDSL Q클래스 자동 생성 경로
 src/main/resources/
   application.yml       → MySQL 운영 환경
@@ -68,6 +69,7 @@ GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 JWT_SECRET
 REDIS_HOST, REDIS_PORT
 GEMINI_API_KEY
+ADMIN_PASSWORD  → 초기 어드민 비밀번호 (필수, 미설정 시 서버 기동 실패)
 ```
 
 JWT: Access Token 30분 / Refresh Token 7일
@@ -131,6 +133,17 @@ JWT: Access Token 30분 / Refresh Token 7일
     - 튜토리얼 플로우
     - JWT 보안 강화 (refresh token Redis 저장 + type 검증)
     - 버그 수정, 배포
+
+[ ] 10단계: 어드민 시스템
+    - Role 기반 권한 (ADMIN > USER Role Hierarchy)
+    - User 엔티티 Role 추가 + CustomUserDetails DB role 기반 권한
+    - isActive → isEnabled() 연결 (비활성화 계정 차단)
+    - SecurityConfig: /api/admin/** ADMIN 전용
+    - AuthResponse role 필드 추가 (AuthService + OAuth2SuccessHandler)
+    - DataInitializer: 어드민 계정 자동 생성 (ADMIN_PASSWORD 환경변수 필수)
+    - Admin API: 문제/몬스터/아이템/코스튬 CRUD, 회원 관리, 랭킹 조회/초기화
+    - 프론트: /admin 독립 대시보드 (AdminRoute 가드, 사이드바 + 테이블 UI)
+    - 설계 문서: docs/superpowers/specs/2026-03-30-admin-system-design.md
 ```
 
 ---
@@ -419,4 +432,48 @@ ZADD ranking:boss    {클리어시간} {user_id}  → 보스 랭킹
 3일  → XP ×1.3
 7일  → XP ×1.5
 30일 → 희귀 칭호 + 골드 200
+```
+
+---
+
+## 어드민 시스템
+
+> 설계 문서: `docs/superpowers/specs/2026-03-30-admin-system-design.md`
+
+### 역할 구조
+
+```
+Role Hierarchy: ADMIN > USER
+- ADMIN: /api/admin/** + 일반 게임 기능 모두 사용 가능
+- USER: 일반 게임 기능만
+```
+
+### 어드민 계정
+
+```
+초기 어드민: admin@herotalk.com (DataInitializer 자동 생성)
+환경변수: ADMIN_PASSWORD (필수, 미설정 시 서버 기동 실패)
+추가 어드민: DataInitializer 직접 수정 (API 없음)
+```
+
+### 어드민 페이지 경로
+
+```
+/admin                → 대시보드
+/admin/questions      → 토익스피킹 문제 CRUD
+/admin/monsters       → 몬스터 CRUD
+/admin/items          → 아이템/코스튬 CRUD
+/admin/users          → 회원 관리 (활성/비활성)
+/admin/rankings       → 랭킹 조회 + 주간 초기화
+```
+
+### Admin API 경로
+
+```
+/api/admin/questions/**
+/api/admin/monsters/**
+/api/admin/items/**
+/api/admin/cosmetics/**
+/api/admin/users/**
+/api/admin/rankings/**
 ```
