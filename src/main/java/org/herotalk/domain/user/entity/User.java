@@ -1,5 +1,6 @@
 package org.herotalk.domain.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.herotalk.global.entity.BaseTimeEntity;
@@ -21,6 +22,7 @@ public class User extends BaseTimeEntity {
     @Column(name = "email", length = 100, unique = true, nullable = false)
     private String email;
 
+    @JsonIgnore
     @Column(name = "password", length = 255)
     private String password;
 
@@ -46,6 +48,13 @@ public class User extends BaseTimeEntity {
         LOCAL, KAKAO, GOOGLE
     }
 
+    public enum Role { USER, ADMIN }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    @Builder.Default
+    private Role role = Role.USER;
+
     public static User createLocal(String email, String password, String nickname) {
         return User.builder()
                 .email(email)
@@ -69,4 +78,7 @@ public class User extends BaseTimeEntity {
     public void updateLastLogin() {
         this.lastLoginAt = LocalDateTime.now();
     }
+
+    public void activate()   { this.isActive = true; }
+    public void deactivate() { this.isActive = false; }
 }
