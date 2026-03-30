@@ -94,7 +94,7 @@ class BattleServiceTest {
     void processTurn_ATTACK_데미지계산_정상() {
         startBattle();
         BattleTurnRequest req =
-            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 90);
+            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 90, null);
 
         BattleTurnResponse resp =
             battleService.processTurn(user.getId(), startedBattleId, req);
@@ -110,7 +110,7 @@ class BattleServiceTest {
     void processTurn_ATTACK_100점_크리티컬() {
         startBattle();
         BattleTurnRequest req =
-            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 100);
+            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 100, null);
 
         BattleTurnResponse resp =
             battleService.processTurn(user.getId(), startedBattleId, req);
@@ -130,7 +130,7 @@ class BattleServiceTest {
 
         BattleStartResponse startResp = battleService.startBattle(user.getId(), weakMonster.getId());
         BattleTurnRequest req =
-            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 80);
+            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 80, null);
 
         BattleTurnResponse resp =
             battleService.processTurn(user.getId(), startResp.getBattleId(), req);
@@ -145,7 +145,7 @@ class BattleServiceTest {
     void processTurn_FLEE_정상() {
         startBattle();
         BattleTurnRequest req =
-            new BattleTurnRequest(BattleTurn.TurnAction.FLEE, null);
+            new BattleTurnRequest(BattleTurn.TurnAction.FLEE, null, null);
 
         BattleTurnResponse resp =
             battleService.processTurn(user.getId(), startedBattleId, req);
@@ -160,12 +160,12 @@ class BattleServiceTest {
         for (int i = 0; i < 3; i++) {
             BattleStartResponse s = battleService.startBattle(user.getId(), monster.getId());
             battleService.processTurn(user.getId(), s.getBattleId(),
-                    new BattleTurnRequest(BattleTurn.TurnAction.FLEE, null));
+                    new BattleTurnRequest(BattleTurn.TurnAction.FLEE, null, null));
         }
         BattleStartResponse s = battleService.startBattle(user.getId(), monster.getId());
         assertThatThrownBy(() ->
             battleService.processTurn(user.getId(), s.getBattleId(),
-                    new BattleTurnRequest(BattleTurn.TurnAction.FLEE, null))
+                    new BattleTurnRequest(BattleTurn.TurnAction.FLEE, null, null))
         ).isInstanceOf(IllegalStateException.class)
          .hasMessageContaining("도망");
     }
@@ -174,7 +174,7 @@ class BattleServiceTest {
     void processTurn_40점이하_복습등록() {
         startBattle();
         BattleTurnRequest req =
-            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 30);
+            new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 30, null);
 
         battleService.processTurn(user.getId(), startedBattleId, req);
 

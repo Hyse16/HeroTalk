@@ -5,6 +5,7 @@ import org.herotalk.domain.battle.service.BattleService;
 import org.herotalk.domain.battle.dto.BattleStartResponse;
 import org.herotalk.domain.battle.dto.BattleTurnResponse;
 import org.herotalk.domain.battle.entity.BattleTurn.TurnAction;
+import org.herotalk.domain.user.entity.User;
 import org.herotalk.security.CustomUserDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +47,7 @@ class BattleControllerTest {
 
         mockMvc.perform(post("/api/battles/start")
                         .with(SecurityMockMvcRequestPostProcessors.user(
-                                new CustomUserDetails(1L, "test@test.com", "")))
+                                new CustomUserDetails(1L, "test@test.com", "", User.Role.USER, true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("monsterId", 1))))
                 .andExpect(status().isCreated())
@@ -66,7 +67,7 @@ class BattleControllerTest {
 
         mockMvc.perform(post("/api/battles/1/turn")
                         .with(SecurityMockMvcRequestPostProcessors.user(
-                                new CustomUserDetails(1L, "test@test.com", "")))
+                                new CustomUserDetails(1L, "test@test.com", "", User.Role.USER, true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("action", "ATTACK", "score", 90))))
                 .andExpect(status().isOk())
@@ -78,7 +79,7 @@ class BattleControllerTest {
     void POST_battles_start_monsterId_없으면_400() throws Exception {
         mockMvc.perform(post("/api/battles/start")
                         .with(SecurityMockMvcRequestPostProcessors.user(
-                                new CustomUserDetails(1L, "test@test.com", "")))
+                                new CustomUserDetails(1L, "test@test.com", "", User.Role.USER, true)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest());
