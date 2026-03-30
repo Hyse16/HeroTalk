@@ -14,7 +14,11 @@ import org.herotalk.domain.quest.entity.DailyQuest;
 import org.herotalk.domain.quest.repository.DailyQuestRepository;
 import org.herotalk.domain.question.entity.Question;
 import org.herotalk.domain.question.repository.QuestionRepository;
+import org.herotalk.domain.user.entity.User;
+import org.herotalk.domain.user.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.env.Environment;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,10 +35,33 @@ public class DataInitializer implements CommandLineRunner {
     private final ItemRepository itemRepository;
     private final CosmeticRepository cosmeticRepository;
     private final DailyQuestRepository dailyQuestRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final Environment environment;
 
     @Override
     @Transactional
     public void run(String... args) {
+        // 1. 어드민 계정 생성 (던전 시드와 독립적으로 항상 먼저 실행)
+        if (userRepository.findByEmail("admin@herotalk.com").isEmpty()) {
+            String adminPassword = environment.getProperty("ADMIN_PASSWORD");
+            if (adminPassword == null || adminPassword.isBlank()) {
+                throw new IllegalStateException(
+                    "ADMIN_PASSWORD 환경변수가 설정되지 않았습니다. 서버를 시작할 수 없습니다."
+                );
+            }
+            User admin = User.builder()
+                    .email("admin@herotalk.com")
+                    .password(passwordEncoder.encode(adminPassword))
+                    .nickname("관리자")
+                    .role(User.Role.ADMIN)
+                    .provider(User.Provider.LOCAL)
+                    .isActive(true)
+                    .build();
+            userRepository.save(admin);
+            log.info("[DataInitializer] 초기 어드민 계정 생성 완료: admin@herotalk.com");
+        }
+
         if (dungeonRepository.count() > 0) {
             log.info("[DataInitializer] 시드 데이터 이미 존재합니다. 건너뜁니다.");
             return;
