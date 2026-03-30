@@ -59,5 +59,4 @@ jwt:
 server:
   port: 8080
 
-admin:
-  password: test-admin-password
+ADMIN_PASSWORD: test-admin-password
