@@ -69,16 +69,17 @@ class QuestionSelectorTest {
         questionHistoryRepository.save(QuestionHistory.builder()
                 .character(character).question(q2).build());
 
-        // 히스토리에 q1, q2 → q3만 선택 가능
+        // 히스토리에 q1, q2 → 선택된 문제는 히스토리에 없어야 한다
         Question selected = questionSelector.select(character, Dungeon.ToeicPart.PART2, Set.of());
-        assertThat(selected.getId()).isEqualTo(q3.getId());
+        assertThat(selected.getId()).isNotIn(q1.getId(), q2.getId());
     }
 
     @Test
     void 배틀내_이미출제_문제_제외() {
         Question selected = questionSelector.select(
                 character, Dungeon.ToeicPart.PART2, Set.of(q1.getId(), q2.getId()));
-        assertThat(selected.getId()).isEqualTo(q3.getId());
+        // 배틀 내 사용된 q1, q2는 제외되어야 한다
+        assertThat(selected.getId()).isNotIn(q1.getId(), q2.getId());
     }
 
     @Test

@@ -20,14 +20,19 @@ import org.herotalk.domain.question.repository.QuestionRepository;
 import org.herotalk.domain.review.repository.ReviewQuestionRepository;
 import org.herotalk.domain.user.entity.User;
 import org.herotalk.domain.user.repository.UserRepository;
+import org.herotalk.domain.ranking.service.RankingService;
+import org.herotalk.global.service.GeminiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -35,6 +40,8 @@ import static org.assertj.core.api.Assertions.*;
 class BattleServiceTest {
 
     @Autowired BattleService battleService;
+    @MockBean GeminiService geminiService;
+    @MockBean RankingService rankingService;
     @Autowired UserRepository userRepository;
     @Autowired CharacterRepository characterRepository;
     @Autowired CharacterStatsRepository characterStatsRepository;
@@ -92,6 +99,8 @@ class BattleServiceTest {
 
     @Test
     void processTurn_ATTACK_데미지계산_정상() {
+        when(geminiService.score(any(), any()))
+            .thenReturn(new GeminiService.GeminiScoreResult(90, "good", "bad", "sample"));
         startBattle();
         BattleTurnRequest req =
             new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 90, null);
@@ -108,6 +117,8 @@ class BattleServiceTest {
 
     @Test
     void processTurn_ATTACK_100점_크리티컬() {
+        when(geminiService.score(any(), any()))
+            .thenReturn(new GeminiService.GeminiScoreResult(100, "good", "bad", "sample"));
         startBattle();
         BattleTurnRequest req =
             new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 100, null);
@@ -122,6 +133,8 @@ class BattleServiceTest {
 
     @Test
     void processTurn_WIN_배틀종료() {
+        when(geminiService.score(any(), any()))
+            .thenReturn(new GeminiService.GeminiScoreResult(80, "good", "bad", "sample"));
         Monster weakMonster = monsterRepository.save(Monster.builder()
                 .dungeon(monster.getDungeon()).name("약한슬라임").hp(1).attackPower(10)
                 .expReward(50).goldReward(10)
@@ -172,6 +185,8 @@ class BattleServiceTest {
 
     @Test
     void processTurn_40점이하_복습등록() {
+        when(geminiService.score(any(), any()))
+            .thenReturn(new GeminiService.GeminiScoreResult(30, "good", "bad", "sample"));
         startBattle();
         BattleTurnRequest req =
             new BattleTurnRequest(BattleTurn.TurnAction.ATTACK, 30, null);
