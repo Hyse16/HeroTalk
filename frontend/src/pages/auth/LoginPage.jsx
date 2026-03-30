@@ -119,9 +119,14 @@ export default function LoginPage() {
     const token = params.get('token')
     const refresh = params.get('refresh')
     const isNew = params.get('isNew') === 'true'
+    const role = params.get('role') || 'USER'
     if (token) {
-      login(null, token, refresh)
-      navigate(isNew ? '/character/create' : '/game', { replace: true })
+      login({ role }, token, refresh)
+      if (role === 'ADMIN') {
+        navigate('/admin', { replace: true })
+      } else {
+        navigate(isNew ? '/character/create' : '/game', { replace: true })
+      }
     }
   }, [])
 
@@ -137,9 +142,13 @@ export default function LoginPage() {
     try {
       if (mode === 'login') {
         const { data } = await api.post('/auth/login', { email: form.email, password: form.password })
-        const { accessToken, refreshToken, userId, nickname, newUser } = data.data
-        login({ userId, nickname }, accessToken, refreshToken)
-        navigate(newUser ? '/character/create' : '/game', { replace: true })
+        const { accessToken, refreshToken, userId, nickname, newUser, role } = data.data
+        login({ userId, nickname, role }, accessToken, refreshToken)
+        if (role === 'ADMIN') {
+          navigate('/admin', { replace: true })
+        } else {
+          navigate(newUser ? '/character/create' : '/game', { replace: true })
+        }
       } else {
         const { data } = await api.post('/auth/signup', form)
         const { accessToken, refreshToken, userId, nickname } = data.data
