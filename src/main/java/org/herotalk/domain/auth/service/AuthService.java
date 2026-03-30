@@ -51,6 +51,7 @@ public class AuthService {
                 .userId(savedUser.getId())
                 .nickname(savedUser.getNickname())
                 .newUser(true)
+                .role(savedUser.getRole().name())
                 .build();
     }
 
@@ -75,6 +76,7 @@ public class AuthService {
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .newUser(false)
+                .role(user.getRole().name())
                 .build();
     }
 
@@ -105,6 +107,7 @@ public class AuthService {
                 .userId(user.getId())
                 .nickname(user.getNickname())
                 .newUser(false)
+                .role(user.getRole().name())
                 .build();
     }
 

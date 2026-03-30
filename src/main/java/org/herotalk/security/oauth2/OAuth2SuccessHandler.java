@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.herotalk.domain.character.repository.CharacterRepository;
+import org.herotalk.domain.user.entity.User;
 import org.herotalk.domain.user.repository.UserRepository;
 import org.herotalk.security.jwt.JwtProvider;
 import org.herotalk.security.jwt.RefreshTokenService;
@@ -38,9 +39,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         Long userId = (Long) oAuth2User.getAttributes().get("userId");
 
-        String email = userRepository.findById(userId)
-                .map(user -> user.getEmail())
-                .orElse("");
+        var userOpt = userRepository.findById(userId);
+        String email = userOpt.map(User::getEmail).orElse("");
+        String role = userOpt.map(u -> u.getRole().name()).orElse("USER");
 
         String accessToken  = jwtProvider.generateAccessToken(userId, email);
         String refreshToken = jwtProvider.generateRefreshToken(userId);
@@ -54,6 +55,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .queryParam("token",   accessToken)
                 .queryParam("refresh", refreshToken)
                 .queryParam("isNew",   !hasCharacter)
+                .queryParam("role",    role)
                 .build().toUriString();
 
         log.info("OAuth2 login success. userId={}, hasCharacter={}", userId, hasCharacter);
