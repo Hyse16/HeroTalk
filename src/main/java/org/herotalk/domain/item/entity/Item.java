@@ -39,4 +39,13 @@ public class Item extends BaseTimeEntity {
     public enum ItemType {
         HP_POTION, XP_BOOSTER, TIME_EXTEND, RETRY, HINT_BOOST
     }
+
+    public Item update(String name, String description, ItemType itemType, int effectValue, int price) {
+        this.name = name;
+        this.description = description;
+        this.itemType = itemType;
+        this.effectValue = effectValue;
+        this.price = price;
+        return this;
+    }
 }

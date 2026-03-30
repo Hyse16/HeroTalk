@@ -48,4 +48,19 @@ public class Question extends BaseTimeEntity {
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean isActive = true;
+
+    public Question update(Dungeon.ToeicPart toeicPart, int difficulty, String questionText,
+                           String imageUrl, String contextData, int prepTime,
+                           int answerTime, String sampleAnswer, String hint) {
+        this.toeicPart = toeicPart;
+        this.difficulty = difficulty;
+        this.questionText = questionText;
+        this.imageUrl = imageUrl;
+        this.contextData = contextData;
+        this.prepTime = prepTime;
+        this.answerTime = answerTime;
+        this.sampleAnswer = sampleAnswer;
+        this.hint = hint;
+        return this;
+    }
 }

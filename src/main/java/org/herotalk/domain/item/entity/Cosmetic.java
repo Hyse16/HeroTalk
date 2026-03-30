@@ -47,4 +47,15 @@ public class Cosmetic extends BaseTimeEntity {
     public enum Rarity {
         COMMON, RARE, EPIC, LEGENDARY
     }
+
+    public Cosmetic update(String name, CosmeticType cosmeticType, String description,
+                           String imageUrl, int price, Rarity rarity) {
+        this.name = name;
+        this.cosmeticType = cosmeticType;
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.price = price;
+        this.rarity = rarity;
+        return this;
+    }
 }

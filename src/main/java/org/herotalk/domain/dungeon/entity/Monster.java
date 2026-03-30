@@ -50,4 +50,17 @@ public class Monster extends BaseTimeEntity {
     public enum MonsterType {
         NORMAL, BOSS, WEEKLY_BOSS
     }
+
+    public Monster update(String name, MonsterType monsterType, int hp, int attackPower,
+                          int expReward, int goldReward, Dungeon.ToeicPart toeicPart, int difficulty) {
+        this.name = name;
+        this.monsterType = monsterType;
+        this.hp = hp;
+        this.attackPower = attackPower;
+        this.expReward = expReward;
+        this.goldReward = goldReward;
+        this.toeicPart = toeicPart;
+        this.difficulty = difficulty;
+        return this;
+    }
 }
