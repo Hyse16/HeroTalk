@@ -14,6 +14,11 @@ export const getMonsters = (page = 0) => api.get(`/admin/monsters?page=${page}&s
 export const createMonster = (data) => api.post('/admin/monsters', data)
 export const updateMonster = (id, data) => api.put(`/admin/monsters/${id}`, data)
 export const deleteMonster = (id) => api.delete(`/admin/monsters/${id}`)
+export const uploadMonstersCsv = (file) => {
+  const form = new FormData()
+  form.append('file', file)
+  return api.post('/admin/monsters/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+}
 
 export const getItems = (page = 0) => api.get(`/admin/items?page=${page}&size=20`)
 export const createItem = (data) => api.post('/admin/items', data)

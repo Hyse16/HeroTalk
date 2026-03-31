@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/admin/monsters")
@@ -39,5 +40,11 @@ public class AdminMonsterController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         adminMonsterService.delete(id);
         return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<ApiResponse<String>> uploadCsv(@RequestParam("file") MultipartFile file) {
+        int count = adminMonsterService.uploadCsv(file);
+        return ResponseEntity.ok(ApiResponse.ok(count + "개 몬스터가 등록되었습니다."));
     }
 }

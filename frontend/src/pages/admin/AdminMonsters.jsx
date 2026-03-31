@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import AdminLayout from '@/components/admin/AdminLayout'
-import { getMonsters, createMonster, updateMonster, deleteMonster } from '@/api/adminApi'
+import { getMonsters, createMonster, updateMonster, deleteMonster, uploadMonstersCsv } from '@/api/adminApi'
 
 const MONSTER_TYPES = ['NORMAL', 'BOSS', 'WEEKLY_BOSS']
 const PARTS = ['PART1', 'PART2', 'PART3', 'PART4', 'PART5', 'PART6']
@@ -14,6 +14,8 @@ export default function AdminMonsters() {
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [loading, setLoading] = useState(false)
+  const [csvMsg, setCsvMsg] = useState('')
+  const fileRef = useRef()
 
   const load = useCallback(async () => {
     const res = await getMonsters(page); setData(res.data.data)
@@ -22,6 +24,31 @@ export default function AdminMonsters() {
 
   const f = (field) => (e) => setForm((p) => ({ ...p, [field]: e.target.value }))
   const fn = (field) => (e) => setForm((p) => ({ ...p, [field]: +e.target.value }))
+
+  const handleCsvUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setCsvMsg('업로드 중...')
+    try {
+      const res = await uploadMonstersCsv(file)
+      setCsvMsg(res.data.data)
+      load()
+    } catch (err) {
+      setCsvMsg('업로드 실패: ' + (err.response?.data?.message || err.message))
+    } finally {
+      fileRef.current.value = ''
+    }
+  }
+
+  const downloadTemplate = () => {
+    const header = 'dungeonId,name,monsterType,hp,attackPower,expReward,goldReward,toeicPart,difficulty'
+    const sample = '1,슬라임,NORMAL,200,10,100,15,PART2,1'
+    const blob = new Blob([header + '\n' + sample], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'monsters_template.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const handleSave = async () => {
     setLoading(true)
@@ -34,10 +61,21 @@ export default function AdminMonsters() {
 
   return (
     <AdminLayout>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700 }}>몬스터 관리</h1>
-        <button onClick={() => { setForm(EMPTY); setModal('create') }} style={btnS('#4c1d95', '#a78bfa')}>+ 몬스터 추가</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={downloadTemplate} style={btnS('#1a3a2e', '#34d399')}>템플릿 다운로드</button>
+          <button onClick={() => fileRef.current.click()} style={btnS('#1e3a5f', '#60a5fa')}>CSV 업로드</button>
+          <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleCsvUpload} />
+          <button onClick={() => { setForm(EMPTY); setModal('create') }} style={btnS('#4c1d95', '#a78bfa')}>+ 몬스터 추가</button>
+        </div>
       </div>
+      {csvMsg && (
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: '#1a2e1a', border: '1px solid #2d4e2d', borderRadius: 6, color: '#34d399', fontSize: 13 }}>
+          {csvMsg}
+          <button onClick={() => setCsvMsg('')} style={{ marginLeft: 12, background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 12 }}>✕</button>
+        </div>
+      )}
       <table style={{ width: '100%', borderCollapse: 'collapse', background: '#1a1a2e', borderRadius: 8 }}>
         <thead><tr style={{ background: '#16162a' }}>
           {['ID','이름','타입','HP','공격력','EXP','골드','파트','작업'].map(h => <th key={h} style={{ padding: '12px', textAlign: 'left', color: '#94a3b8', fontSize: 13 }}>{h}</th>)}
