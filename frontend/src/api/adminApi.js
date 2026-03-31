@@ -4,6 +4,11 @@ export const getQuestions = (page = 0) => api.get(`/admin/questions?page=${page}
 export const createQuestion = (data) => api.post('/admin/questions', data)
 export const updateQuestion = (id, data) => api.put(`/admin/questions/${id}`, data)
 export const deleteQuestion = (id) => api.delete(`/admin/questions/${id}`)
+export const uploadQuestionsCsv = (file) => {
+  const form = new FormData()
+  form.append('file', file)
+  return api.post('/admin/questions/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } })
+}
 
 export const getMonsters = (page = 0) => api.get(`/admin/monsters?page=${page}&size=20`)
 export const createMonster = (data) => api.post('/admin/monsters', data)
