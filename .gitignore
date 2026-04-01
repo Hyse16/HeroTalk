@@ -77,3 +77,6 @@ frontend/.env.*
 # Git worktrees
 .worktrees/
 .superpowers/
+
+# Local data files (not for version control)
+data/
