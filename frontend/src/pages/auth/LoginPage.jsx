@@ -33,7 +33,7 @@ function TavernScene3D() {
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 0.68
+    renderer.toneMappingExposure = 2.4
     el.appendChild(renderer.domElement)
 
     /* ──────────────────────────────────────────────
@@ -427,11 +427,11 @@ function TavernScene3D() {
     /* ──────────────────────────────────────────────
        조명 (Lighting)
     ────────────────────────────────────────────── */
-    // 극히 어두운 ambient
-    scene.add(new THREE.AmbientLight(0x160804, 0.38))
+    // ambient (따뜻한 선술집 분위기)
+    scene.add(new THREE.AmbientLight(0x6a3e1e, 5.0))
 
     // 벽난로 메인 (flickering point light)
-    const fireLight = new THREE.PointLight(0xff5208, 16, 28)
+    const fireLight = new THREE.PointLight(0xff5208, 22, 32)
     fireLight.position.set(-10.4, 1.5, -2.6)
     fireLight.castShadow = true
     fireLight.shadow.mapSize.set(1024, 1024)
@@ -499,6 +499,177 @@ function TavernScene3D() {
     scene.add(emberPoints)
 
     /* ──────────────────────────────────────────────
+       3D 선술집 주인장 — 그라가스 스타일
+       (거대한 배, 대머리, 짧고 굵은 팔, 큰 술통)
+    ────────────────────────────────────────────── */
+    function buildInnkeeper() {
+      const g = new THREE.Group()
+
+      // 재질
+      const skin    = new THREE.MeshStandardMaterial({ color: 0xc86848, roughness: 0.68 })
+      const redSkin = new THREE.MeshStandardMaterial({ color: 0xa84828, roughness: 0.72 }) // 코·볼 붉은기
+      const robe    = new THREE.MeshStandardMaterial({ color: 0x3a2010, roughness: 0.88 }) // 어두운 갈색 로브
+      const apron   = new THREE.MeshStandardMaterial({ color: 0x9a7030, roughness: 0.82 })
+      const pants   = new THREE.MeshStandardMaterial({ color: 0x160e06, roughness: 0.94 })
+      const bootM   = new THREE.MeshStandardMaterial({ color: 0x0e0804, roughness: 0.55, metalness: 0.18 })
+      const beard   = new THREE.MeshStandardMaterial({ color: 0x8a4820, roughness: 0.94 }) // 붉은빛 수염
+      const eyeW    = new THREE.MeshStandardMaterial({ color: 0xeee4d0, roughness: 0.6 })
+      const eyeI    = new THREE.MeshStandardMaterial({ color: 0x3c2810, roughness: 0.4 })
+      const eyeP    = new THREE.MeshStandardMaterial({ color: 0x080604, roughness: 0.3 })
+      const barrelM = new THREE.MeshStandardMaterial({ color: 0x3a1e08, roughness: 0.86 })
+      const hoopM   = new THREE.MeshStandardMaterial({ color: 0x2a2010, roughness: 0.35, metalness: 0.75 })
+      const foamM   = new THREE.MeshStandardMaterial({ color: 0xf2ede0, roughness: 0.96 })
+
+      // ── 부츠 (짧고 넓음) ──
+      ;[-0.22, 0.22].forEach(bx => {
+        const bo = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.28, 0.52), bootM)
+        bo.position.set(bx, 0.14, 0.06); bo.castShadow = true; g.add(bo)
+        const toe = new THREE.Mesh(new THREE.SphereGeometry(0.19, 8, 5), bootM)
+        toe.scale.set(1, 0.55, 1.35); toe.position.set(bx, 0.16, 0.30); g.add(toe)
+      })
+
+      // ── 다리 (짧고 굵음, 배 아래 거의 숨겨짐) ──
+      ;[-0.22, 0.22].forEach(lx => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.18, 0.52, 12), pants)
+        leg.position.set(lx, 0.54, 0); leg.castShadow = true; g.add(leg)
+      })
+
+      // ── 초거대 배 (그라가스 핵심) ──
+      const belly = new THREE.Mesh(new THREE.SphereGeometry(0.82, 18, 14), robe)
+      belly.scale.set(1, 0.92, 0.88)
+      belly.position.set(0, 1.18, 0.10); belly.castShadow = true; g.add(belly)
+
+      // 배 위에 앞치마 (늘어진 형태)
+      const apronFront = new THREE.Mesh(new THREE.SphereGeometry(0.80, 16, 10), apron)
+      apronFront.scale.set(0.78, 0.65, 0.20)
+      apronFront.position.set(0, 1.10, 0.82); g.add(apronFront)
+
+      // ── 가슴/어깨 상체 ──
+      const torso = new THREE.Mesh(new THREE.SphereGeometry(0.62, 14, 10), robe)
+      torso.scale.set(1.02, 0.72, 0.80)
+      torso.position.set(0, 1.68, -0.04); torso.castShadow = true; g.add(torso)
+
+      // ── 어깨 (넓고 둥글게) ──
+      ;[-0.76, 0.76].forEach(sx => {
+        const sh = new THREE.Mesh(new THREE.SphereGeometry(0.30, 10, 8), robe)
+        sh.scale.set(0.88, 0.80, 0.76); sh.position.set(sx, 1.72, -0.02); g.add(sh)
+      })
+
+      // ── 왼팔 (짧고 굵게 내려뜨림) ──
+      const luA = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.18, 0.58, 12), robe)
+      luA.position.set(-0.92, 1.44, 0.05); luA.rotation.z = 0.22; luA.castShadow = true; g.add(luA)
+      const lfA = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.15, 0.50, 12), robe)
+      lfA.position.set(-1.02, 1.13, 0.05); lfA.rotation.z = 0.15; lfA.castShadow = true; g.add(lfA)
+      const lH = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), skin)
+      lH.scale.set(1.0, 0.85, 0.92); lH.position.set(-1.09, 0.87, 0.05); g.add(lH)
+
+      // ── 오른팔 (술통 들어올리는 포즈) ──
+      const ruA = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.18, 0.58, 12), robe)
+      ruA.position.set(0.90, 1.60, 0.15); ruA.rotation.z = -0.60; ruA.rotation.x = 0.32
+      ruA.castShadow = true; g.add(ruA)
+      const rfA = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.15, 0.50, 12), robe)
+      rfA.position.set(1.08, 1.38, 0.38); rfA.rotation.z = -0.90; rfA.rotation.x = 0.55
+      rfA.castShadow = true; g.add(rfA)
+      const rH = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), skin)
+      rH.scale.set(1.0, 0.85, 0.92); rH.position.set(1.20, 1.22, 0.56); g.add(rH)
+
+      // ── 큰 술통 (barrel) ──
+      const barBody = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.20, 0.52, 16), barrelM)
+      barBody.position.set(1.35, 1.22, 0.70)
+      barBody.rotation.z = -0.3; barBody.rotation.x = 0.6; barBody.castShadow = true; g.add(barBody)
+      ;[-0.14, 0, 0.14].forEach(ho => {
+        const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.225, 0.022, 6, 16), hoopM)
+        hoop.position.set(1.35 + ho * Math.sin(0.3), 1.22 + ho * Math.cos(0.3), 0.70)
+        hoop.rotation.z = -0.3; hoop.rotation.x = 0.6; g.add(hoop)
+      })
+      // 술통 위 거품
+      const foamB = new THREE.Mesh(new THREE.SphereGeometry(0.20, 8, 5), foamM)
+      foamB.scale.set(1, 0.32, 1); foamB.position.set(1.48, 1.42, 0.84); g.add(foamB)
+
+      // ── 목 (굵고 짧음) ──
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.26, 0.22, 12), skin)
+      neck.position.set(0, 1.98, 0.05); g.add(neck)
+
+      // ── 머리 (크고 둥글고 대머리) ──
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 18, 14), skin)
+      head.scale.set(1, 1.06, 0.95)
+      head.position.set(0, 2.30, 0.03); head.castShadow = true; g.add(head)
+
+      // 이마 넓적
+      const brow2 = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 8), skin)
+      brow2.scale.set(0.98, 0.55, 0.78); brow2.position.set(0, 2.46, 0.18); g.add(brow2)
+
+      // 통통한 볼 (음주로 붉게)
+      ;[-0.22, 0.22].forEach(cx => {
+        const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), redSkin)
+        cheek.scale.set(0.82, 0.68, 0.62); cheek.position.set(cx, 2.22, 0.34); g.add(cheek)
+      })
+
+      // 귀 (크고 두꺼움)
+      ;[-0.40, 0.40].forEach(ex => {
+        const ear = new THREE.Mesh(new THREE.SphereGeometry(0.10, 8, 6), redSkin)
+        ear.scale.set(0.58, 1.0, 0.70); ear.position.set(ex, 2.28, 0.03); g.add(ear)
+      })
+
+      // 코 (크고 구근형)
+      const nose = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 7), redSkin)
+      nose.scale.set(1.0, 0.85, 1.20); nose.position.set(0, 2.22, 0.44); g.add(nose)
+      const nB = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.07, 0.14, 6), redSkin)
+      nB.rotation.x = 0.28; nB.position.set(0, 2.32, 0.42); g.add(nB)
+      // 콧볼
+      ;[-0.09, 0.09].forEach(nx => {
+        const nw = new THREE.Mesh(new THREE.SphereGeometry(0.065, 7, 5), redSkin)
+        nw.position.set(nx, 2.20, 0.46); g.add(nw)
+      })
+
+      // 눈 (반쯤 취한 표정 — 약간 작게)
+      ;[-0.14, 0.14].forEach((ex, i) => {
+        const ew = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 7), eyeW)
+        ew.scale.set(0.90, 0.62, 0.52); ew.position.set(ex, 2.34, 0.36); g.add(ew)
+        const ei = new THREE.Mesh(new THREE.SphereGeometry(0.048, 8, 6), eyeI)
+        ei.scale.set(0.88, 0.75, 0.40); ei.position.set(ex, 2.337, 0.385); g.add(ei)
+        const ep = new THREE.Mesh(new THREE.SphereGeometry(0.028, 6, 4), eyeP)
+        ep.scale.set(0.88, 0.75, 0.40); ep.position.set(ex, 2.335, 0.390); g.add(ep)
+      })
+
+      // 눈썹 (굵고 찌푸린 듯)
+      ;[[-0.14, -0.42], [0.14, 0.42]].forEach(([ex, rz]) => {
+        const br = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.042, 0.035), beard)
+        br.rotation.z = rz * 0.28; br.position.set(ex, 2.40, 0.370); g.add(br)
+      })
+
+      // ── 수염 (짧고 붉은 텁수룩한 수염 — 그라가스 스타일) ──
+      const beardPts = [
+        [0,     2.12, 0.40, 0.17, 1.10, 0.75, 0.85],
+        [-0.14, 2.10, 0.38, 0.14, 0.90, 0.68, 0.78],
+        [0.14,  2.10, 0.38, 0.14, 0.90, 0.68, 0.78],
+        [0,     2.00, 0.36, 0.18, 1.05, 0.82, 0.80],
+        [-0.18, 1.98, 0.32, 0.14, 0.88, 0.78, 0.75],
+        [0.18,  1.98, 0.32, 0.14, 0.88, 0.78, 0.75],
+        [0,     1.90, 0.28, 0.16, 1.00, 0.90, 0.78],
+        [-0.15, 1.88, 0.25, 0.12, 0.85, 0.82, 0.72],
+        [0.15,  1.88, 0.25, 0.12, 0.85, 0.82, 0.72],
+        [0,     1.80, 0.20, 0.13, 0.95, 1.00, 0.75],
+      ]
+      beardPts.forEach(([bx, by, bz, r, sx, sy, sz]) => {
+        const b = new THREE.Mesh(new THREE.SphereGeometry(r, 8, 6), beard)
+        b.scale.set(sx, sy, sz); b.position.set(bx, by, bz); g.add(b)
+      })
+      // 콧수염 (두꺼운 일자)
+      ;[[-0.12, 2.165, 0.42], [0.12, 2.165, 0.42]].forEach(([mx, my, mz]) => {
+        const m = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 5), beard)
+        m.scale.set(1.55, 0.58, 0.80); m.position.set(mx, my, mz); g.add(m)
+      })
+
+      g.position.set(-0.5, 0, 3.5)
+      g.rotation.y = 0.12
+      g.scale.set(0.70, 0.70, 0.70)
+      scene.add(g)
+      return g
+    }
+    const innkeeper = buildInnkeeper()
+
+    /* ──────────────────────────────────────────────
        애니메이션
     ────────────────────────────────────────────── */
     let t = 0; let raf
@@ -521,6 +692,10 @@ function TavernScene3D() {
 
       // 촛불 깜박임
       candleLights.forEach((cl, i) => { cl.intensity = 1.8 + Math.sin(t * 7 + i * 2.6) * 0.7 })
+
+      // 주인장 숨쉬기 + 고개 미세 흔들림
+      innkeeper.position.y = Math.sin(t * 1.6) * 0.016
+      innkeeper.rotation.y = 0.12 + Math.sin(t * 0.5) * 0.035
 
       // 카메라 패럴랙스
       camera.position.x = 1.0 + mouse.x * 0.22
@@ -579,579 +754,6 @@ function TavernScene3D() {
   }, [])
 
   return <div ref={mountRef} className="tv-3d-scene" />
-}
-
-/* ═══════════════════════════════════════════════════
-   사실적인 주인장 SVG — 해부학적 비율 + PBR 조명 시뮬레이션
-   viewBox 0 0 300 540 | 얼굴 중심 (150, 172)
-   광원: 왼쪽 벽난로 (따뜻한 주황)
-═══════════════════════════════════════════════════ */
-function Innkeeper() {
-  return (
-    <svg viewBox="0 0 300 540" xmlns="http://www.w3.org/2000/svg"
-      className="tv-innkeeper" style={{ overflow: 'visible' }}>
-      <defs>
-        {/* ── 피부 기반 그라디언트 ── */}
-        <radialGradient id="sk0" cx="46%" cy="36%" r="60%">
-          <stop offset="0%"   stopColor="#e8a272"/>
-          <stop offset="38%"  stopColor="#cc7c4c"/>
-          <stop offset="72%"  stopColor="#a85c2c"/>
-          <stop offset="100%" stopColor="#7a3c18"/>
-        </radialGradient>
-        {/* 벽난로 빛 (왼쪽 warm) */}
-        <radialGradient id="skFire" cx="8%" cy="48%" r="85%">
-          <stop offset="0%"   stopColor="rgba(255,130,30,0.42)"/>
-          <stop offset="45%"  stopColor="rgba(255,90,10,0.18)"/>
-          <stop offset="100%" stopColor="rgba(255,60,0,0)"/>
-        </radialGradient>
-        {/* 이마 위 Fresnel 하이라이트 */}
-        <radialGradient id="skSpec" cx="44%" cy="22%" r="48%">
-          <stop offset="0%"   stopColor="rgba(255,220,180,0.38)"/>
-          <stop offset="55%"  stopColor="rgba(255,180,120,0.12)"/>
-          <stop offset="100%" stopColor="rgba(255,120,60,0)"/>
-        </radialGradient>
-        {/* 오른쪽 쿨 새도우 */}
-        <radialGradient id="skShadow" cx="100%" cy="50%" r="65%">
-          <stop offset="0%"   stopColor="rgba(30,10,5,0.45)"/>
-          <stop offset="100%" stopColor="rgba(30,10,5,0)"/>
-        </radialGradient>
-        {/* 관자놀이/턱선 림 라이트 */}
-        <linearGradient id="skRim" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%"   stopColor="rgba(255,90,10,0.22)"/>
-          <stop offset="50%"  stopColor="rgba(0,0,0,0)"/>
-          <stop offset="100%" stopColor="rgba(10,5,20,0.18)"/>
-        </linearGradient>
-        {/* SSS — 코·귀 붉은빛 */}
-        <radialGradient id="sssNose" cx="50%" cy="58%" r="55%">
-          <stop offset="0%"   stopColor="rgba(210,55,25,0.42)"/>
-          <stop offset="100%" stopColor="rgba(210,55,25,0)"/>
-        </radialGradient>
-        <radialGradient id="sssEar" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="rgba(200,75,55,0.48)"/>
-          <stop offset="100%" stopColor="rgba(200,75,55,0)"/>
-        </radialGradient>
-        <radialGradient id="sssLip" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="rgba(195,50,30,0.35)"/>
-          <stop offset="100%" stopColor="rgba(195,50,30,0)"/>
-        </radialGradient>
-        {/* 볼 홍조 */}
-        <radialGradient id="cheekL" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="rgba(205,65,35,0.32)"/>
-          <stop offset="100%" stopColor="rgba(205,65,35,0)"/>
-        </radialGradient>
-        <radialGradient id="cheekR" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="rgba(185,50,25,0.24)"/>
-          <stop offset="100%" stopColor="rgba(185,50,25,0)"/>
-        </radialGradient>
-        {/* 홍채 */}
-        <radialGradient id="iris" cx="36%" cy="30%" r="72%">
-          <stop offset="0%"   stopColor="#82b4d0"/>
-          <stop offset="42%"  stopColor="#3c7ea0"/>
-          <stop offset="78%"  stopColor="#1c4c6a"/>
-          <stop offset="100%" stopColor="#0a2838"/>
-        </radialGradient>
-        {/* 흰머리 */}
-        <linearGradient id="hair" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stopColor="#f2eee8"/>
-          <stop offset="100%" stopColor="#d8d4cc"/>
-        </linearGradient>
-        {/* 의상 */}
-        <linearGradient id="shirtGr" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%"   stopColor="#eee2cc"/>
-          <stop offset="100%" stopColor="#c8b898"/>
-        </linearGradient>
-        <linearGradient id="vestGr" x1="0%" y1="0%" x2="12%" y2="100%">
-          <stop offset="0%"   stopColor="#2c1a08"/>
-          <stop offset="100%" stopColor="#120802"/>
-        </linearGradient>
-        <linearGradient id="apronGr" x1="0%" y1="0%" x2="8%" y2="100%">
-          <stop offset="0%"   stopColor="#cca868"/>
-          <stop offset="100%" stopColor="#a88448"/>
-        </linearGradient>
-        {/* 맥주 탱커드 */}
-        <linearGradient id="mugGr" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stopColor="#4a2810"/>
-          <stop offset="40%"  stopColor="#2a1406"/>
-          <stop offset="100%" stopColor="#1a0c04"/>
-        </linearGradient>
-        <radialGradient id="beerGr" cx="28%" cy="18%" r="75%">
-          <stop offset="0%"   stopColor="#e09020"/>
-          <stop offset="55%"  stopColor="#b06010"/>
-          <stop offset="100%" stopColor="#4a2008"/>
-        </radialGradient>
-        {/* 피부 소프트 블러 필터 */}
-        <filter id="skinSoft" x="-5%" y="-5%" width="110%" height="110%">
-          <feGaussianBlur stdDeviation="1.4" result="blur"/>
-          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-        </filter>
-        <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3.5" result="blur"/>
-          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-        </filter>
-        <filter id="deepShadow">
-          <feDropShadow dx="4" dy="6" stdDeviation="5" floodColor="rgba(10,3,1,0.7)"/>
-        </filter>
-      </defs>
-
-      {/* ════════════════════════════════════
-          의상 (Clothing) — 아래부터 위로
-      ════════════════════════════════════ */}
-      {/* 셔츠 */}
-      <path d="M42 365 Q16 392 12 540 L288 540 Q284 392 258 365 Q210 338 150 333 Q90 338 42 365 Z"
-        fill="url(#shirtGr)"/>
-      {/* 앞치마 */}
-      <path d="M98 338 Q90 388 88 540 L212 540 L210 388 Q205 342 150 337 Q125 337 98 338 Z"
-        fill="url(#apronGr)" opacity="0.85"/>
-      {/* 앞치마 주름 */}
-      <line x1="150" y1="345" x2="148" y2="540" stroke="rgba(180,140,70,0.22)" strokeWidth="3"/>
-      <line x1="125" y1="350" x2="122" y2="540" stroke="rgba(180,140,70,0.15)" strokeWidth="2"/>
-      <line x1="175" y1="350" x2="178" y2="540" stroke="rgba(180,140,70,0.15)" strokeWidth="2"/>
-      {/* 앞치마 끈 */}
-      <path d="M98 340 Q82 330 74 318" stroke="#cca868" strokeWidth="5.5" fill="none" strokeLinecap="round"/>
-      <path d="M202 340 Q218 330 226 318" stroke="#cca868" strokeWidth="5.5" fill="none" strokeLinecap="round"/>
-      {/* 조끼 왼쪽 */}
-      <path d="M60 362 Q38 396 36 540 L150 540 L150 333 Q95 335 60 362 Z" fill="url(#vestGr)" opacity="0.93"/>
-      {/* 조끼 오른쪽 */}
-      <path d="M240 362 Q262 396 264 540 L150 540 L150 333 Q205 335 240 362 Z" fill="url(#vestGr)" opacity="0.93"/>
-      {/* 조끼 테두리 스티치 */}
-      <path d="M62 360 Q40 398 38 540" fill="none" stroke="#4a2810" strokeWidth="1.8" strokeDasharray="4 3" opacity="0.55"/>
-      <path d="M238 360 Q260 398 262 540" fill="none" stroke="#4a2810" strokeWidth="1.8" strokeDasharray="4 3" opacity="0.55"/>
-      {/* 단추 */}
-      {[395, 424, 453, 482, 511].map((y, i) => (
-        <g key={i}>
-          <circle cx="150" cy={y} r="5.5" fill="#6a4818" stroke="#8a6030" strokeWidth="1.2"/>
-          <circle cx="150" cy={y} r="2.8" fill="none" stroke="#9a7038" strokeWidth="0.8"/>
-        </g>
-      ))}
-      {/* 셔츠 칼라 */}
-      <path d="M110 333 L126 360 L150 346 L174 360 L190 333 Q168 320 150 318 Q132 320 110 333 Z"
-        fill="#f0e8d8"/>
-      <path d="M110 333 L126 360 L150 340 Z" fill="#e0d2bc" opacity="0.55"/>
-      <path d="M190 333 L174 360 L150 340 Z" fill="#e0d2bc" opacity="0.55"/>
-      <path d="M110 333 Q115 340 126 360" fill="none" stroke="#ddd0b8" strokeWidth="1.5" opacity="0.5"/>
-      {/* 멜빵 */}
-      <path d="M104 330 Q88 375 80 540" stroke="#8a4818" strokeWidth="11" fill="none" opacity="0.78" strokeLinecap="round"/>
-      <path d="M104 330 Q88 375 80 540" stroke="#aa6838" strokeWidth="5" fill="none" opacity="0.28" strokeLinecap="round"/>
-      <path d="M196 330 Q212 375 220 540" stroke="#8a4818" strokeWidth="11" fill="none" opacity="0.78" strokeLinecap="round"/>
-      <path d="M196 330 Q212 375 220 540" stroke="#aa6838" strokeWidth="5" fill="none" opacity="0.28" strokeLinecap="round"/>
-
-      {/* ════════════════════════════════════
-          오른팔 + 맥주잔
-      ════════════════════════════════════ */}
-      {/* 위팔 소매 */}
-      <path d="M240 368 Q274 408 268 452 Q264 472 256 484"
-        stroke="#e2d6c0" strokeWidth="36" fill="none" strokeLinecap="round" opacity="0.72"/>
-      {/* 위팔 피부 */}
-      <path d="M240 368 Q274 408 268 452 Q264 472 256 484"
-        stroke="#cc7e50" strokeWidth="30" fill="none" strokeLinecap="round"/>
-      {/* 전완 피부 */}
-      <path d="M256 484 Q250 496 242 500"
-        stroke="#c67848" strokeWidth="26" fill="none" strokeLinecap="round"/>
-      {/* 소매 끝단 */}
-      <path d="M259 475 Q253 492 245 498"
-        stroke="#e2d6c0" strokeWidth="22" fill="none" strokeLinecap="round" opacity="0.6"/>
-
-      {/* 손 (맥주잔 잡기) */}
-      <ellipse cx="242" cy="500" rx="20" ry="14" fill="#c67848" transform="rotate(-18 242 500)"/>
-      {/* 손가락 */}
-      <path d="M226 492 Q218 478 222 466" stroke="#c07040" strokeWidth="10" fill="none" strokeLinecap="round"/>
-      <path d="M231 490 Q224 475 228 462" stroke="#c07040" strokeWidth="10" fill="none" strokeLinecap="round"/>
-      <path d="M237 489 Q231 473 234 460" stroke="#bf6c3c" strokeWidth="10" fill="none" strokeLinecap="round"/>
-      <path d="M243 489 Q240 473 242 460" stroke="#be6c3c" strokeWidth="9" fill="none" strokeLinecap="round"/>
-      {/* 손가락 관절 하이라이트 */}
-      {[[221,471],[227,468],[233,466],[239,465]].map(([x,y],i) => (
-        <ellipse key={i} cx={x} cy={y} rx="3.8" ry="2.5" fill="rgba(210,160,110,0.38)" transform={`rotate(-18 ${x} ${y})`}/>
-      ))}
-      {/* 손등 힘줄 */}
-      <path d="M228 490 Q220 475 223 464" fill="none" stroke="rgba(150,80,30,0.25)" strokeWidth="1.5"/>
-      <path d="M234 490 Q227 474 230 463" fill="none" stroke="rgba(150,80,30,0.2)" strokeWidth="1.5"/>
-
-      {/* 맥주 탱커드 (목재 + 금속 밴드) */}
-      {/* 탱커드 몸체 */}
-      <path d="M220 462 Q218 478 220 500 Q222 518 235 520 Q258 522 266 518 Q276 514 276 498 Q277 477 270 460 Q258 456 242 456 Q228 458 220 462 Z"
-        fill="url(#mugGr)"/>
-      {/* 나무 결 텍스처 */}
-      <path d="M224 462 Q222 480 224 498 Q226 514 235 518"
-        fill="none" stroke="#5a3012" strokeWidth="3" opacity="0.42" strokeLinecap="round"/>
-      <path d="M238 458 Q236 480 238 502" fill="none" stroke="#5a3012" strokeWidth="2.5" opacity="0.32"/>
-      {/* 금속 밴드 3개 */}
-      {[470, 486, 500].map((y, i) => (
-        <path key={i} d={`M219 ${y} Q244 ${y - 2} 274 ${y}`}
-          fill="none" stroke="#6a4818" strokeWidth="5.5" opacity="0.75"/>
-      ))}
-      {/* 맥주 (호박색) */}
-      <path d="M224 464 Q222 480 224 498 Q226 516 235 518 Q258 520 266 516 Q274 512 274 497 Q274 478 268 463 Z"
-        fill="url(#beerGr)" opacity="0.88"/>
-      {/* 맥주 버블 */}
-      {[[238,475],[250,482],[260,470],[245,490],[265,485]].map(([x,y],i) => (
-        <circle key={i} cx={x} cy={y} r={2.5 - i * 0.2} fill="rgba(255,180,40,0.22)"/>
-      ))}
-      {/* 윗 테두리 */}
-      <path d="M218 455 Q244 450 272 455 Q274 462 272 466 Q244 461 218 466 Z"
-        fill="#7a5020"/>
-      {/* 거품 */}
-      <ellipse cx="245" cy="460" rx="25" ry="9" fill="rgba(245,240,228,0.95)"/>
-      {[238,248,256,264,244,252].map((x, i) => (
-        <ellipse key={i} cx={x} cy={456 + (i % 2) * 3} rx={6 + (i % 3) * 2} ry={4 + (i % 2) * 2}
-          fill={`rgba(255,255,250,${0.65 - i * 0.05})`}/>
-      ))}
-      {/* 거품 하이라이트 */}
-      <ellipse cx="240" cy="454" rx="5" ry="2.5" fill="rgba(255,255,255,0.82)"/>
-      <ellipse cx="255" cy="452" rx="4" ry="2" fill="rgba(255,255,255,0.7)"/>
-      {/* 손잡이 */}
-      <path d="M274 466 Q294 468 295 481 Q296 494 274 496"
-        fill="none" stroke="#5a2e0a" strokeWidth="12" strokeLinecap="round"/>
-      <path d="M274 466 Q292 468 293 481 Q294 494 274 496"
-        fill="none" stroke="#8a4e20" strokeWidth="5.5" strokeLinecap="round" opacity="0.45"/>
-      {/* 탱커드 그림자 */}
-      <path d="M225 510 Q244 514 265 510 Q254 524 235 524 Z"
-        fill="rgba(0,0,0,0.28)" filter="url(#skinSoft)"/>
-
-      {/* ════════════════════════════════════
-          왼팔 (카운터에 기댐)
-      ════════════════════════════════════ */}
-      <path d="M60 368 Q28 404 32 444"
-        stroke="#e2d6c0" strokeWidth="36" fill="none" strokeLinecap="round" opacity="0.7"/>
-      <path d="M60 368 Q28 404 32 444"
-        stroke="#cc7e50" strokeWidth="30" fill="none" strokeLinecap="round"/>
-      <ellipse cx="33" cy="455" rx="20" ry="14" fill="#c67848"/>
-
-      {/* ════════════════════════════════════
-          목 (Neck)
-      ════════════════════════════════════ */}
-      <path d="M120 312 Q116 328 118 348 Q130 356 150 358 Q170 356 182 348 Q184 328 180 312 Q167 302 150 300 Q133 302 120 312 Z"
-        fill="#c47850"/>
-      {/* 목 깊이 음영 */}
-      <path d="M120 316 Q118 334 120 350" stroke="#8a3c18" strokeWidth="7" fill="none" opacity="0.24"/>
-      <path d="M180 316 Q182 334 180 350" stroke="#8a3c18" strokeWidth="7" fill="none" opacity="0.18"/>
-      {/* 목 정중앙 홈 */}
-      <path d="M148 308 Q146 328 148 352 Q150 354 152 352 Q150 328 152 308"
-        fill="none" stroke="#9a4820" strokeWidth="2.5" opacity="0.32"/>
-      {/* 아담의 사과 */}
-      <ellipse cx="150" cy="328" rx="9" ry="7" fill="#b87040" opacity="0.38"/>
-      <ellipse cx="150" cy="326" rx="5" ry="3.5" fill="rgba(255,180,120,0.18)"/>
-
-      {/* ════════════════════════════════════
-          머리 (Head) — 정밀 레이어
-      ════════════════════════════════════ */}
-
-      {/* 귀 (head 뒤에서 먼저) */}
-      {/* 왼쪽 귀 */}
-      <ellipse cx="64" cy="185" rx="18" ry="24" fill="#c47850"/>
-      <ellipse cx="64" cy="185" rx="18" ry="24" fill="url(#sssEar)"/>
-      <path d="M64 168 Q56 178 58 195 Q60 208 66 216" fill="none" stroke="#9a4c28" strokeWidth="2.2" opacity="0.45"/>
-      <path d="M62 175 Q55 185 56 198" fill="none" stroke="#8a3c20" strokeWidth="1.5" opacity="0.38"/>
-      <ellipse cx="62" cy="220" rx="8" ry="11" fill="#b07040"/>
-      {/* 오른쪽 귀 */}
-      <ellipse cx="236" cy="185" rx="18" ry="24" fill="#c47850"/>
-      <ellipse cx="236" cy="185" rx="18" ry="24" fill="url(#sssEar)"/>
-      <path d="M236 168 Q244 178 242 195 Q240 208 234 216" fill="none" stroke="#9a4c28" strokeWidth="2.2" opacity="0.4"/>
-      <ellipse cx="238" cy="220" rx="8" ry="11" fill="#b07040"/>
-
-      {/* ── 두상 기본 형태 ── */}
-      {/* 외부 정밀 두상 */}
-      <path d="
-        M 80 250
-        Q 72 200 76 155
-        Q 84 95 116 74
-        Q 133 64 150 62
-        Q 167 64 184 74
-        Q 216 95 224 155
-        Q 228 200 220 250
-        Q 210 285 186 300
-        Q 168 310 150 312
-        Q 132 310 114 300
-        Q 90 285 80 250 Z"
-        fill="url(#sk0)" filter="url(#skinSoft)"/>
-
-      {/* 피부 — 벽난로 따뜻한 빛 (왼쪽) */}
-      <path d="
-        M 80 250 Q 72 200 76 155 Q 84 95 116 74
-        Q 133 64 150 62 Q 150 62 150 312
-        Q 132 310 114 300 Q 90 285 80 250 Z"
-        fill="url(#skFire)" opacity="0.9"/>
-
-      {/* 피부 — 이마 Fresnel 스페큘러 */}
-      <ellipse cx="146" cy="118" rx="65" ry="48" fill="url(#skSpec)" opacity="0.85"/>
-
-      {/* 피부 — 오른쪽 쿨 새도우 */}
-      <path d="
-        M 150 62 Q 167 64 184 74 Q 216 95 224 155
-        Q 228 200 220 250 Q 210 285 186 300
-        Q 168 310 150 312 Z"
-        fill="url(#skShadow)" opacity="0.82"/>
-
-      {/* 림 라이트 */}
-      <path d="M 80 250 Q 72 200 76 155 Q 84 95 116 74 Q 133 64 150 62"
-        fill="none" stroke="rgba(255,95,15,0.28)" strokeWidth="6"/>
-      <path d="M 150 62 Q 184 74 224 155 Q 228 200 220 250"
-        fill="none" stroke="rgba(15,8,30,0.22)" strokeWidth="5"/>
-
-      {/* 관자놀이 / 눈 소켓 음영 */}
-      <ellipse cx="74" cy="165" rx="18" ry="32" fill="rgba(80,30,10,0.22)"/>
-      <ellipse cx="226" cy="165" rx="18" ry="32" fill="rgba(30,15,30,0.28)"/>
-
-      {/* ── 이마 주름 3줄 ── */}
-      {[
-        { d: "M 99 122 Q 130 114 162 116 Q 178 118 195 124", w: 1.8, o: 0.36 },
-        { d: "M 102 136 Q 132 128 162 130 Q 178 132 190 137", w: 1.5, o: 0.28 },
-        { d: "M 106 150 Q 133 143 162 145 Q 176 147 186 151", w: 1.2, o: 0.22 },
-      ].map(({ d, w, o }, i) => (
-        <path key={i} d={d} fill="none" stroke="#8a4220" strokeWidth={w} opacity={o} strokeLinecap="round"/>
-      ))}
-
-      {/* 미간 수직 주름 */}
-      <path d="M 135 108 Q 133 122 136 136" fill="none" stroke="#8a4220" strokeWidth="1.8" opacity="0.38"/>
-      <path d="M 165 108 Q 167 122 164 136" fill="none" stroke="#8a4220" strokeWidth="1.8" opacity="0.38"/>
-
-      {/* ── 눈썹 (두껍고 흰, 찌푸린 듯) ── */}
-      {/* 왼 눈썹 */}
-      <path d="M 84 161 Q 100 151 122 155" stroke="#c8c4bc" strokeWidth="8.5" fill="none" strokeLinecap="round" opacity="0.9"/>
-      <path d="M 84 161 Q 100 149 122 155" stroke="#eeebe6" strokeWidth="5.5" fill="none" strokeLinecap="round" opacity="0.65"/>
-      {/* 눈썹 가닥 텍스처 */}
-      {[88, 94, 100, 106, 112, 118].map((x, i) => {
-        const baseY = 162 - i * 0.7
-        return <path key={i} d={`M ${x} ${baseY} Q ${x + 2} ${baseY - 6} ${x + 5} ${baseY - 3}`}
-          stroke="#c0bab2" strokeWidth="1.8" fill="none" opacity="0.48"/>
-      })}
-      {/* 오른 눈썹 */}
-      <path d="M 178 155 Q 200 151 216 161" stroke="#c8c4bc" strokeWidth="8.5" fill="none" strokeLinecap="round" opacity="0.9"/>
-      <path d="M 178 155 Q 200 149 216 161" stroke="#eeebe6" strokeWidth="5.5" fill="none" strokeLinecap="round" opacity="0.65"/>
-      {[180, 186, 192, 198, 204, 210].map((x, i) => {
-        const baseY = 157 + i * 0.5
-        return <path key={i} d={`M ${x} ${baseY} Q ${x + 2} ${baseY - 6} ${x + 5} ${baseY - 3}`}
-          stroke="#c0bab2" strokeWidth="1.8" fill="none" opacity="0.45"/>
-      })}
-      {/* 눈썹 밑 음영 (눈두덩 볼륨) */}
-      <path d="M 84 163 Q 103 167 125 163" fill="none" stroke="rgba(80,25,8,0.22)" strokeWidth="6" strokeLinecap="round"/>
-      <path d="M 175 163 Q 197 167 216 163" fill="none" stroke="rgba(60,20,25,0.22)" strokeWidth="6" strokeLinecap="round"/>
-
-      {/* ── 눈 ── */}
-      {/* 눈 소켓 오목 음영 */}
-      <ellipse cx="105" cy="178" rx="25" ry="17" fill="rgba(75,28,10,0.22)"/>
-      <ellipse cx="195" cy="178" rx="25" ry="17" fill="rgba(50,20,18,0.20)"/>
-
-      {/* 흰자 */}
-      <ellipse cx="105" cy="179" rx="19" ry="12.5" fill="#f2eeea"/>
-      <ellipse cx="195" cy="179" rx="19" ry="12.5" fill="#ededea"/>
-      {/* 흰자 혈관 (약간 충혈) */}
-      <path d="M 91 179 Q 96 177 100 179" stroke="#d08870" strokeWidth="0.9" fill="none" opacity="0.38"/>
-      <path d="M 122 177 Q 118 180 122 182" stroke="#d08870" strokeWidth="0.9" fill="none" opacity="0.32"/>
-      <path d="M 185 178 Q 188 180 183 182" stroke="#c87870" strokeWidth="0.8" fill="none" opacity="0.28"/>
-
-      {/* 홍채 */}
-      <circle cx="105" cy="179" r="10.5" fill="url(#iris)"/>
-      <circle cx="195" cy="179" r="10.5" fill="url(#iris)"/>
-      {/* 홍채 가닥 */}
-      {Array.from({length: 14}, (_, i) => {
-        const a = i * Math.PI / 7
-        return <g key={i}>
-          <line x1={105 + 5.5*Math.cos(a)} y1={179 + 5.5*Math.sin(a)}
-                x2={105 + 10*Math.cos(a)}  y2={179 + 10*Math.sin(a)}
-                stroke="rgba(15,50,90,0.2)" strokeWidth="0.7"/>
-          <line x1={195 + 5.5*Math.cos(a)} y1={179 + 5.5*Math.sin(a)}
-                x2={195 + 10*Math.cos(a)}  y2={179 + 10*Math.sin(a)}
-                stroke="rgba(15,50,90,0.2)" strokeWidth="0.7"/>
-        </g>
-      })}
-      {/* 각막 반사 (limbal ring) */}
-      <circle cx="105" cy="179" r="10.5" fill="none" stroke="#081520" strokeWidth="1.8" opacity="0.58"/>
-      <circle cx="195" cy="179" r="10.5" fill="none" stroke="#081520" strokeWidth="1.8" opacity="0.52"/>
-      {/* 동공 */}
-      <circle cx="105" cy="179" r="5.8" fill="#060810"/>
-      <circle cx="195" cy="179" r="5.8" fill="#060810"/>
-      {/* 캐치라이트 (벽난로 주 반사) */}
-      <circle cx="101" cy="174" r="3.5" fill="rgba(255,255,255,0.88)"/>
-      <circle cx="191" cy="174" r="3.5" fill="rgba(255,255,255,0.88)"/>
-      {/* 보조 캐치라이트 (촛불) */}
-      <circle cx="109" cy="183" r="1.8" fill="rgba(255,190,80,0.45)"/>
-      <circle cx="199" cy="183" r="1.8" fill="rgba(255,190,80,0.40)"/>
-      {/* 각막 볼륨 하이라이트 */}
-      <ellipse cx="102" cy="174" rx="4.5" ry="3" fill="rgba(255,255,255,0.18)"/>
-      <ellipse cx="192" cy="174" rx="4.5" ry="3" fill="rgba(255,255,255,0.15)"/>
-
-      {/* 위 눈꺼풀 */}
-      <path d="M 86 170 Q 105 163 124 170 Q 105 184 86 170 Z" fill="#a86840" opacity="0.68"/>
-      <path d="M 176 170 Q 195 163 214 170 Q 195 184 176 170 Z" fill="#a86840" opacity="0.62"/>
-      {/* 눈꺼풀 주름 (쌍꺼풀선) */}
-      <path d="M 88 168 Q 105 161 124 168" fill="none" stroke="#9a4828" strokeWidth="1.5" opacity="0.4"/>
-      <path d="M 176 168 Q 195 161 214 168" fill="none" stroke="#9a4828" strokeWidth="1.5" opacity="0.38"/>
-      {/* 아래 눈꺼풀 */}
-      <path d="M 88 189 Q 105 196 122 189" fill="none" stroke="#a05030" strokeWidth="1.7" opacity="0.4"/>
-      <path d="M 178 189 Q 195 196 212 189" fill="none" stroke="#a05030" strokeWidth="1.7" opacity="0.36"/>
-      {/* 눈밑 다크서클 */}
-      <ellipse cx="105" cy="193" rx="16" ry="7" fill="rgba(80,30,12,0.16)"/>
-      <ellipse cx="195" cy="193" rx="16" ry="7" fill="rgba(60,25,20,0.14)"/>
-
-      {/* 속눈썹 (위) */}
-      {[[87,170],[92,165],[98,162],[104,161],[110,162],[117,165],[123,170]].map(([x,y],i) => (
-        <line key={i} x1={x} y1={y} x2={x - 1 + i * 0.35} y2={y - 5.5}
-          stroke="#1a0e06" strokeWidth="1.6" strokeLinecap="round" opacity="0.72"/>
-      ))}
-      {[[177,170],[182,165],[188,162],[194,161],[200,162],[207,165],[213,170]].map(([x,y],i) => (
-        <line key={i} x1={x} y1={y} x2={x - 1 + i * 0.35} y2={y - 5.5}
-          stroke="#1a0e06" strokeWidth="1.6" strokeLinecap="round" opacity="0.65"/>
-      ))}
-      {/* 까마귀발 주름 */}
-      <path d="M 87 170 Q 78 165 74 160" stroke="#8a4020" strokeWidth="1.4" fill="none" opacity="0.42"/>
-      <path d="M 87 177 Q 78 175 73 171" stroke="#8a4020" strokeWidth="1.2" fill="none" opacity="0.35"/>
-      <path d="M 87 184 Q 78 184 73 181" stroke="#8a4020" strokeWidth="1.0" fill="none" opacity="0.28"/>
-      <path d="M 213 170 Q 222 165 226 160" stroke="#8a4020" strokeWidth="1.4" fill="none" opacity="0.38"/>
-      <path d="M 213 177 Q 222 175 227 171" stroke="#8a4020" strokeWidth="1.2" fill="none" opacity="0.30"/>
-
-      {/* ── 코 ── */}
-      {/* 콧등 브릿지 */}
-      <path d="M 138 158 Q 134 178 133 202 Q 135 212 150 218 Q 165 212 167 202 Q 166 178 162 158"
-        fill="rgba(165,80,40,0.42)" filter="url(#skinSoft)"/>
-      {/* 코 끝 (둥글고 붉은 — 주점 주인) */}
-      <ellipse cx="150" cy="216" rx="20" ry="17" fill="#c87858"/>
-      <ellipse cx="150" cy="218" rx="16" ry="13" fill="#d08860"/>
-      <ellipse cx="150" cy="215" rx="18" ry="14" fill="url(#sssNose)"/>
-      {/* 코끝 하이라이트 */}
-      <ellipse cx="145" cy="211" rx="7" ry="5" fill="rgba(255,210,170,0.32)"/>
-      {/* 콧구멍 */}
-      <ellipse cx="138" cy="221" rx="9.5" ry="7.5" fill="#8a3820" opacity="0.74"/>
-      <ellipse cx="162" cy="221" rx="9.5" ry="7.5" fill="#8a3820" opacity="0.74"/>
-      {/* 콧구멍 하이라이트 */}
-      <ellipse cx="136" cy="219" rx="3.2" ry="2.2" fill="#c07050" opacity="0.42"/>
-      <ellipse cx="160" cy="219" rx="3.2" ry="2.2" fill="#c07050" opacity="0.38"/>
-      {/* 코 날개 음영 */}
-      <path d="M 124 208 Q 120 218 126 226" stroke="#8a3618" strokeWidth="2.5" fill="none" opacity="0.36"/>
-      <path d="M 176 208 Q 180 218 174 226" stroke="#8a3618" strokeWidth="2.5" fill="none" opacity="0.32"/>
-      {/* 코 밑 그림자 */}
-      <path d="M 128 223 Q 150 230 172 223"
-        fill="none" stroke="rgba(60,15,5,0.28)" strokeWidth="4" strokeLinecap="round" filter="url(#skinSoft)"/>
-
-      {/* ── 볼 ── */}
-      <ellipse cx="86" cy="210" rx="28" ry="22" fill="url(#cheekL)"/>
-      <ellipse cx="214" cy="210" rx="28" ry="22" fill="url(#cheekR)"/>
-      {/* 볼 뼈 하이라이트 (광대뼈) */}
-      <ellipse cx="88" cy="202" rx="18" ry="9" fill="rgba(255,190,130,0.14)"/>
-      <ellipse cx="212" cy="202" rx="18" ry="9" fill="rgba(255,190,130,0.1)"/>
-
-      {/* 팔자주름 */}
-      <path d="M 122 212 Q 111 230 116 250" stroke="#8a4620" strokeWidth="2.4" fill="none" opacity="0.4"/>
-      <path d="M 178 212 Q 189 230 184 250" stroke="#8a4620" strokeWidth="2.4" fill="none" opacity="0.36"/>
-
-      {/* ── 입 ── */}
-      {/* 윗입술 */}
-      <path d="M 114 243 Q 126 235 150 237 Q 174 235 186 243 Q 174 251 150 252 Q 126 251 114 243 Z"
-        fill="#7a3018"/>
-      {/* 큐피드 활 */}
-      <path d="M 123 239 Q 132 231 150 233 Q 168 231 177 239" fill="#6a2010" opacity="0.52"/>
-      {/* 아랫입술 */}
-      <path d="M 112 245 Q 126 264 150 266 Q 174 264 188 245 Q 172 255 150 257 Q 128 255 112 245 Z"
-        fill="#9a4422"/>
-      {/* 입술 SSS */}
-      <ellipse cx="150" cy="252" rx="24" ry="9" fill="url(#sssLip)" opacity="0.7"/>
-      {/* 아랫입술 하이라이트 */}
-      <ellipse cx="148" cy="259" rx="15" ry="4.5" fill="rgba(210,110,70,0.32)"/>
-      {/* 치아 (웃음) */}
-      <path d="M 117 247 Q 150 262 183 247 Q 150 265 117 247 Z" fill="#ede5d8" opacity="0.68"/>
-      {/* 입 꼬리 */}
-      <path d="M 112 245 Q 103 240 98 234" stroke="#8a3e1e" strokeWidth="1.8" fill="none" opacity="0.4"/>
-      <path d="M 188 245 Q 197 240 202 234" stroke="#8a3e1e" strokeWidth="1.8" fill="none" opacity="0.36"/>
-      {/* 입술선 */}
-      <path d="M 112 247 Q 150 266 188 247" fill="none" stroke="#6a2010" strokeWidth="1.6" opacity="0.38"/>
-
-      {/* 턱 딤플 */}
-      <path d="M 145 280 Q 150 285 155 280" stroke="#8a4828" strokeWidth="1.8" fill="none" opacity="0.28"/>
-      {/* 턱 아랫 그림자 */}
-      <ellipse cx="150" cy="295" rx="40" ry="12" fill="rgba(40,10,3,0.32)" filter="url(#skinSoft)"/>
-
-      {/* 노인 반점 */}
-      {[[83,158,4.5,3],[205,166,4,3],[182,150,3.5,2.8],[97,145,4,3.2],[196,142,3,2.2]].map(([x,y,rx,ry],i) => (
-        <ellipse key={i} cx={x} cy={y} rx={rx} ry={ry} fill="#8a5030" opacity={0.14 + i*0.01}/>
-      ))}
-
-      {/* ── 흰 머리카락 (옆머리, 대머리) ── */}
-      {/* 왼쪽 풍성한 흰 머리 */}
-      <path d="M 78 122 Q 60 134 56 160 Q 50 188 56 215 Q 62 232 78 242 Q 80 200 80 168 Q 80 142 78 122 Z"
-        fill="url(#hair)" opacity="0.94"/>
-      {/* 왼 머리카락 결 */}
-      {[122, 132, 142, 152, 162, 172, 182, 192, 202, 212].map((y, i) => (
-        <path key={i} d={`M 78 ${y} Q 69 ${y+3} 62 ${y-2}`}
-          stroke="#ccc8be" strokeWidth="2.0" fill="none" opacity="0.44"/>
-      ))}
-      {/* 오른쪽 풍성한 흰 머리 */}
-      <path d="M 222 122 Q 240 134 244 160 Q 250 188 244 215 Q 238 232 222 242 Q 220 200 220 168 Q 220 142 222 122 Z"
-        fill="url(#hair)" opacity="0.94"/>
-      {[122, 132, 142, 152, 162, 172, 182, 192, 202, 212].map((y, i) => (
-        <path key={i} d={`M 222 ${y} Q 231 ${y+3} 238 ${y-2}`}
-          stroke="#ccc8be" strokeWidth="2.0" fill="none" opacity="0.42"/>
-      ))}
-      {/* 정수리 듬성한 머리 */}
-      {[
-        "M 118 80 Q 134 66 148 70",
-        "M 122 88 Q 140 74 145 78",
-        "M 148 66 Q 158 58 166 65",
-        "M 145 74 Q 156 66 165 71",
-      ].map((d, i) => (
-        <path key={i} d={d} stroke="#dedad4" strokeWidth={2.5 - i * 0.2} fill="none" opacity={0.55 - i * 0.06}/>
-      ))}
-      {/* 구레나룻 */}
-      <path d="M 78 228 Q 74 242 76 254 Q 80 262 86 254 Q 84 240 82 232 Z" fill="#e8e4dc"/>
-      <path d="M 222 228 Q 226 242 224 254 Q 220 262 214 254 Q 216 240 218 232 Z" fill="#e8e4dc"/>
-
-      {/* ════════════════════════════════════
-          수염 (Full White Beard)
-      ════════════════════════════════════ */}
-      {/* 수염 메인 볼륨 */}
-      <path d="M 78 244 Q 72 270 74 294 Q 78 326 96 348 Q 116 366 150 370 Q 184 366 204 348 Q 222 326 226 294 Q 228 270 222 244 Q 206 258 180 264 Q 166 268 150 269 Q 134 268 120 264 Q 94 258 78 244 Z"
-        fill="#ece8e2"/>
-      {/* 수염 왼쪽 볼륨 그림자 */}
-      <path d="M 78 244 Q 72 272 74 296 Q 78 328 96 350"
-        fill="none" stroke="#cdc9c1" strokeWidth="4" opacity="0.48"/>
-      {/* 수염 오른쪽 미묘한 그림자 */}
-      <path d="M 222 244 Q 228 272 226 296 Q 222 328 204 350"
-        fill="none" stroke="#c8c5be" strokeWidth="3.5" opacity="0.38"/>
-      {/* 수염 중앙 홈 */}
-      <path d="M 144 270 Q 140 300 142 334 Q 145 352 150 364"
-        stroke="#d8d4ce" strokeWidth="3" fill="none" opacity="0.55"/>
-      <path d="M 156 270 Q 160 300 158 334 Q 155 352 150 364"
-        stroke="#d8d4ce" strokeWidth="3" fill="none" opacity="0.5"/>
-      {/* 수염 가닥 텍스처 */}
-      {[
-        [108,266],[116,282],[124,298],[132,314],[148,282],[156,298],[164,314],[172,282],
-        [140,262],[160,262],[126,270],[174,270],[136,310],[164,310]
-      ].map(([x, y], i) => (
-        <path key={i}
-          d={`M ${x} ${y} Q ${x+(i%2===0?7:-7)} ${y+16} ${x+(i%2===0?5:-5)} ${y+32}`}
-          stroke="#dcdad2" strokeWidth="2.2" fill="none" opacity="0.52"/>
-      ))}
-      {/* 수염 끝 잔털 */}
-      {[116, 124, 132, 140, 148, 156, 164, 172, 180].map((x, i) => (
-        <path key={i} d={`M ${x} ${356} Q ${x+(i%2===0?4:-4)} ${366} ${x+(i%2===0?2:-2)} ${370}`}
-          stroke="#dedad4" strokeWidth="3.5" fill="none" opacity="0.52"/>
-      ))}
-      {/* 수염 광원 하이라이트 (왼쪽 벽난로) */}
-      <path d="M 78 244 Q 72 280 76 316"
-        fill="none" stroke="rgba(255,140,40,0.12)" strokeWidth="20" strokeLinecap="round"/>
-
-      {/* ── 콧수염 (풍성한 바다코끼리형) ── */}
-      <path d="M 110 236 Q 122 225 150 227 Q 178 225 190 236 Q 178 248 164 245 Q 158 243 150 242 Q 142 243 136 245 Q 122 248 110 236 Z"
-        fill="#eeeae4"/>
-      {/* 콧수염 가닥 */}
-      <path d="M 114 235 Q 124 228 138 230" stroke="#dedad2" strokeWidth="2.2" fill="none" opacity="0.52"/>
-      <path d="M 152 230 Q 166 228 176 235" stroke="#dedad2" strokeWidth="2.2" fill="none" opacity="0.5"/>
-      <path d="M 118 237 Q 126 232 134 234" stroke="#d8d4cc" strokeWidth="1.8" fill="none" opacity="0.42"/>
-      <path d="M 156 234 Q 164 232 172 237" stroke="#d8d4cc" strokeWidth="1.8" fill="none" opacity="0.4"/>
-
-      {/* ════════════════════════════════════
-          최종 조명 오버레이
-      ════════════════════════════════════ */}
-      {/* 전체 벽난로 림 라이트 (왼쪽 얼굴) */}
-      <path d="M 78 110 Q 70 195 78 278 Q 96 305 150 318"
-        fill="none" stroke="rgba(255,145,35,0.11)" strokeWidth="40" strokeLinecap="round"/>
-
-      {/* 오른쪽 서브 서피스 쿨 림 */}
-      <path d="M 222 130 Q 232 205 222 280"
-        fill="none" stroke="rgba(20,10,30,0.16)" strokeWidth="16" strokeLinecap="round"/>
-
-      {/* 전체 그림자 드롭 */}
-      <ellipse cx="152" cy="536" rx="90" ry="14" fill="rgba(0,0,0,0.45)" filter="url(#skinSoft)"/>
-    </svg>
-  )
 }
 
 /* ── 마우스 패럴랙스 ── */
@@ -1220,18 +822,6 @@ export default function LoginPage() {
     <div className="tv-root">
       {/* Three.js 3D 씬 */}
       <TavernScene3D />
-
-      {/* 주인장 오버레이 */}
-      <div className="tv-keeper-wrap" style={{ transform: `translate(${mouse.x * 6}px, ${mouse.y * 5}px)` }}>
-        <Innkeeper />
-        <div className="tv-speech">
-          <div className="tv-speech-bubble">
-            <span className="tv-speech-text">어이, 모험가여...</span>
-            <span className="tv-speech-sub">맥주 한잔 하겠나? 🍺</span>
-          </div>
-          <div className="tv-speech-tail" />
-        </div>
-      </div>
 
       {/* 전경 안개 */}
       <div className="tv-fog" />
