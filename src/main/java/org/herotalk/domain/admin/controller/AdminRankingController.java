@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.herotalk.domain.admin.service.AdminRankingService;
 import org.herotalk.domain.ranking.dto.RankingEntry;
 import org.herotalk.global.response.ApiResponse;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@Profile("!local")
 @RequestMapping("/api/admin/rankings")
 @RequiredArgsConstructor
 public class AdminRankingController {

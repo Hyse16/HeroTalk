@@ -3,6 +3,7 @@ package org.herotalk.domain.ranking.service;
 import lombok.RequiredArgsConstructor;
 import org.herotalk.domain.character.repository.CharacterRepository;
 import org.herotalk.domain.ranking.dto.RankingEntry;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@Profile("!local")
 @RequiredArgsConstructor
 public class RankingService {
 

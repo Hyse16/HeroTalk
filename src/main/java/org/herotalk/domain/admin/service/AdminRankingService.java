@@ -3,12 +3,14 @@ package org.herotalk.domain.admin.service;
 import lombok.RequiredArgsConstructor;
 import org.herotalk.domain.ranking.dto.RankingEntry;
 import org.herotalk.domain.ranking.service.RankingService;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Profile("!local")
 @RequiredArgsConstructor
 public class AdminRankingService {
 

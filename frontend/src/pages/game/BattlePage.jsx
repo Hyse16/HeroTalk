@@ -174,6 +174,7 @@ export default function BattlePage() {
   const [result, setResult] = useState(null)
   const [processing, setProcessing] = useState(false)
   const [awaitingSTT, setAwaitingSTT] = useState(false)
+  const [retryConfirm, setRetryConfirm] = useState(false)  // "한번 더 녹음?" 다이얼로그
   const [hintUsed, setHintUsed] = useState(false)   // 힌트 본 상태 → 다음 공격에 -20% 적용
   const [monsterShake, setMonsterShake] = useState(false)
 
@@ -234,22 +235,40 @@ export default function BattlePage() {
     }
   }, [battle])
 
-  // STT 녹음 종료 시 transcript를 백엔드 전송 → Gemini 채점
-  // transcriptRef는 onresult에서 동기 저장되므로 onend(isListening=false) 시점에 이미 값 확정
+  // 녹음 종료 시 → 즉시 제출 대신 재시도 다이얼로그 표시
   useEffect(() => {
-    if (awaitingSTT && !isListening) {
-      const action = hintUsed ? 'HINT' : 'ATTACK'
-      handleTurn(action, { transcript: transcriptRef.current || '' })
-      setHintUsed(false)
+    if (awaitingSTT && !isListening && !retryConfirm) {
+      setRetryConfirm(true)
     }
-  }, [awaitingSTT, isListening, handleTurn, hintUsed, transcriptRef])
+  }, [awaitingSTT, isListening])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAttack = () => {
     if (processing || awaitingSTT) return
+    setRetryConfirm(false)
     setAwaitingSTT(true)
     startListening()
-    setTimeout(() => stopListening(), 10000)
   }
+
+  // "공격 완료" — 녹음 중단 → 재시도 다이얼로그
+  const handleStopAttack = () => {
+    stopListening()
+    // isListening이 false로 바뀌면 위 useEffect가 retryConfirm=true 설정
+  }
+
+  // "예, 다시 녹음" — 재시도
+  const handleRetry = () => {
+    setRetryConfirm(false)
+    startListening()
+  }
+
+  // "아니오, 제출" — AI 채점 요청
+  const handleSubmitAttack = useCallback(() => {
+    setRetryConfirm(false)
+    setAwaitingSTT(false)
+    const action = hintUsed ? 'HINT' : 'ATTACK'
+    handleTurn(action, { transcript: transcriptRef.current || '' })
+    setHintUsed(false)
+  }, [hintUsed, handleTurn, transcriptRef])
 
   const handleHint = () => {
     if (processing || awaitingSTT) return
@@ -316,7 +335,14 @@ export default function BattlePage() {
             {isListening && (
               <div className="battle-recording">
                 <div className="battle-recording-dot" />
-                🎤 녹음 중... {hintUsed ? '(힌트 사용 -20%)' : '(10초 후 자동 종료)'}
+                🎤 녹음 중... {hintUsed ? '(힌트 사용 -20%)' : ''}
+              </div>
+            )}
+            {retryConfirm && !isListening && (
+              <div className="battle-retry-bar">
+                <span>한번 더 녹음하시겠습니까?</span>
+                <button className="battle-retry-btn yes" onClick={handleRetry}>예</button>
+                <button className="battle-retry-btn no"  onClick={handleSubmitAttack}>아니오</button>
               </div>
             )}
             {processing && !isListening && (
@@ -328,18 +354,28 @@ export default function BattlePage() {
         )}
 
         <div className="battle-actions">
-          <button
-            className="battle-action-btn attack"
-            onClick={handleAttack}
-            disabled={processing || awaitingSTT || !!result}
-          >
-            🎤 {hintUsed ? '힌트+공격' : '공격'}
-            <span className="battle-action-sub">말해서 데미지</span>
-          </button>
+          {isListening ? (
+            <button
+              className="battle-action-btn attack"
+              onClick={handleStopAttack}
+            >
+              ✅ 공격 완료
+              <span className="battle-action-sub">녹음 중단 후 확인</span>
+            </button>
+          ) : (
+            <button
+              className="battle-action-btn attack"
+              onClick={handleAttack}
+              disabled={processing || awaitingSTT || retryConfirm || !!result}
+            >
+              🎤 {hintUsed ? '힌트+공격' : '공격 시작'}
+              <span className="battle-action-sub">말해서 데미지</span>
+            </button>
+          )}
           <button
             className={`battle-action-btn${hintUsed ? ' hint-active' : ''}`}
             onClick={handleHint}
-            disabled={processing || awaitingSTT || !!result || hintUsed}
+            disabled={processing || awaitingSTT || retryConfirm || !!result || hintUsed}
           >
             📖 힌트{hintUsed ? ' ✓' : ''}
             <span className="battle-action-sub">{hintUsed ? '공격 시 -20%' : '데미지 -20%'}</span>
@@ -347,7 +383,7 @@ export default function BattlePage() {
           <button
             className="battle-action-btn"
             onClick={handlePass}
-            disabled={processing || awaitingSTT || !!result}
+            disabled={processing || awaitingSTT || retryConfirm || !!result}
           >
             ⏭ 패스
             <span className="battle-action-sub">반격 1.5배</span>
@@ -355,7 +391,7 @@ export default function BattlePage() {
           <button
             className="battle-action-btn flee"
             onClick={handleFlee}
-            disabled={processing || awaitingSTT || !!result}
+            disabled={processing || awaitingSTT || retryConfirm || !!result}
           >
             🏃 도망
             <span className="battle-action-sub">하루 3회</span>

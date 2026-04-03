@@ -366,3 +366,40 @@
   from { text-shadow: 0 0 8px rgba(240,192,64,0.6); }
   to   { text-shadow: 0 0 20px rgba(240,192,64,1), 0 0 40px rgba(240,192,64,0.4); }
 }
+
+.battle-retry-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: rgba(240, 192, 64, 0.08);
+  border: 1px solid #f0c04066;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #f0c040;
+  flex-wrap: wrap;
+}
+
+.battle-retry-btn {
+  padding: 6px 18px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  font-family: monospace;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.battle-retry-btn.yes {
+  background: #374151;
+  color: #e2e8f0;
+}
+.battle-retry-btn.yes:hover { background: #4b5563; }
+
+.battle-retry-btn.no {
+  background: #dc2626;
+  color: #fff;
+}
+.battle-retry-btn.no:hover { background: #b91c1c; }
