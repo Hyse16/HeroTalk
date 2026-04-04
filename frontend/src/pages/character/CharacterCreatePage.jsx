@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import CharacterSvg from '@/components/CharacterSvg'
+import Character3D from '@/components/Character3D'
 import { getCharacter, createCharacter } from '@/api/characterApi'
 import './CharacterCreatePage.css'
 
@@ -103,11 +103,14 @@ export default function CharacterCreatePage() {
         <div className="cc-preview">
           <div className="cc-preview-label">CHARACTER PREVIEW</div>
           <div className={`cc-avatar ${selectedJob ? 'cc-avatar-selected' : ''}`}>
-            <CharacterSvg
+            <Character3D
               job={selectedJob || 'WARRIOR'}
               gender={gender}
-              width={80}
-              height={96}
+              width={160}
+              height={200}
+              autoRotate={true}
+              rotateSpeed={0.9}
+              animate={true}
             />
           </div>
           <div className="cc-gender-toggle">

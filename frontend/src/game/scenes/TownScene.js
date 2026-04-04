@@ -1,7 +1,8 @@
 import Phaser from 'phaser'
 import EventBus from '../EventBus'
+import { renderCharacter3DToCanvas } from '../../utils/renderCharacter3D'
 
-// ─── 직업별 캐릭터 그리기 (container 로컬 좌표, 발 = y:0) ───────────────────
+// ─── [LEGACY] 직업별 캐릭터 그리기 — TownScene은 3D 텍스처로 교체됨 ─────────
 function drawJobCharacter(gfx, job, gender) {
   gfx.clear()
 
@@ -274,9 +275,16 @@ export default class TownScene extends Phaser.Scene {
     this._gender = gender || 'MALE'
     this._name   = name   || '영웅'
     this._level  = level  || 1
-    // 플레이어 그래픽 갱신
-    drawJobCharacter(this._playerGfx, this._job, this._gender)
+    this._refreshPlayerTexture()
     this.playerLabel.setText(`${this._name}  Lv.${this._level}`)
+  }
+
+  _refreshPlayerTexture() {
+    const KEY = 'player-3d'
+    const charCanvas = renderCharacter3DToCanvas(this._job, this._gender, 100, 150)
+    if (this.textures.exists(KEY)) this.textures.remove(KEY)
+    this.textures.addCanvas(KEY, charCanvas)
+    if (this._playerImg) this._playerImg.setTexture(KEY)
   }
 
   // ── 하늘 + 별 + 달 + 산 실루엣 ─────────────────────────────────────────
@@ -426,18 +434,22 @@ export default class TownScene extends Phaser.Scene {
     }).setOrigin(0.5).setAlpha(0)
   }
 
-  // ── 플레이어 ─────────────────────────────────────────────────────────────
+  // ── 플레이어 (3D 텍스처) ─────────────────────────────────────────────────
   _createPlayer(W, H, GY) {
-    this._playerGfx = this.add.graphics()
-    drawJobCharacter(this._playerGfx, this._job, this._gender)
+    const KEY = 'player-3d'
+    const charCanvas = renderCharacter3DToCanvas(this._job, this._gender, 100, 150)
+    this.textures.addCanvas(KEY, charCanvas)
 
-    this.player = this.add.container(200, GY - 12, [this._playerGfx])
+    // origin(0.5, 1) → 발 기준 정렬
+    this._playerImg = this.add.image(0, 0, KEY).setOrigin(0.5, 1).setScale(0.78)
+
+    this.player = this.add.container(200, GY - 12, [this._playerImg])
     this.physics.world.enable(this.player)
     this.player.body.setSize(28, 62)
     this.player.body.setOffset(-14, -60)
     this.player.body.setCollideWorldBounds(true)
 
-    this.playerLabel = this.add.text(200, GY - 85, `${this._name}  Lv.${this._level}`, {
+    this.playerLabel = this.add.text(200, GY - 90, `${this._name}  Lv.${this._level}`, {
       fontSize: '12px', color: '#ffffff', fontFamily: 'monospace',
       stroke: '#000', strokeThickness: 2,
     }).setOrigin(0.5)

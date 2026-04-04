@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { processTurn } from '@/api/battleApi'
 import useSpeechRecognition from '@/hooks/useSpeechRecognition'
 import useCharacterStore from '@/store/characterStore'
+import Character3D from '@/components/Character3D'
 import './BattlePage.css'
 
-// ── Canvas character sprite (mirrors TownScene drawJobCharacter) ─────────────
+// ── [REMOVED] Canvas 2D character sprite → Character3D로 교체됨 ─────────────
+// hexRgba / roundedRect / drawCharOnCanvas / CharacterSprite 삭제
 function hexRgba(hex, alpha = 1) {
   const r = (hex >> 16) & 0xff
   const g = (hex >> 8) & 0xff
@@ -317,7 +319,14 @@ export default function BattlePage() {
         </div>
         <div className="battle-vs">VS</div>
         <div className="battle-character-sprite">
-          <CharacterSprite job={charJob} gender={charGender} />
+          <Character3D
+            job={charJob}
+            gender={charGender}
+            width={130}
+            height={170}
+            animate={true}
+            autoRotate={false}
+          />
         </div>
       </div>
 

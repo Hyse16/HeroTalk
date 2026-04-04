@@ -59,20 +59,21 @@
   margin-bottom: 20px;
 }
 .cc-avatar {
-  width: 120px;
-  height: 120px;
-  background: rgba(245, 158, 11, 0.1);
+  width: 170px;
+  height: 210px;
+  background: rgba(245, 158, 11, 0.07);
   border: 2px solid rgba(245, 158, 11, 0.3);
-  border-radius: 50%;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
   overflow: hidden;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 .cc-avatar-selected {
   border-color: #f59e0b;
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.25);
 }
 .cc-job-name {
   color: #f59e0b;
