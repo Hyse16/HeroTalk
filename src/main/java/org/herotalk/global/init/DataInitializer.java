@@ -107,53 +107,54 @@ public class DataInitializer implements CommandLineRunner {
         Dungeon d5 = dungeons.get(4); // 오크 요새
         Dungeon d6 = dungeons.get(5); // 드래곤 성
 
+        // HP 기준: 일반 몬스터 3~4타(점수 80+, 데미지 ~45) 처치, 보스 8~12타
         monsterRepository.saveAll(List.of(
             // 훈련소 숲 (PART1)
             Monster.builder().dungeon(d1).name("이끼 골렘").monsterType(Monster.MonsterType.NORMAL)
-                .hp(100).attackPower(5).expReward(50).goldReward(10)
+                .hp(80).attackPower(5).expReward(50).goldReward(10)
                 .toeicPart(Dungeon.ToeicPart.PART1).difficulty(1).build(),
 
             // 초보자 숲 (PART2)
             Monster.builder().dungeon(d2).name("슬라임").monsterType(Monster.MonsterType.NORMAL)
-                .hp(200).attackPower(10).expReward(100).goldReward(15)
+                .hp(120).attackPower(10).expReward(100).goldReward(15)
                 .toeicPart(Dungeon.ToeicPart.PART2).difficulty(1).build(),
             Monster.builder().dungeon(d2).name("고블린 킹").monsterType(Monster.MonsterType.BOSS)
-                .hp(1000).attackPower(30).expReward(1000).goldReward(150)
+                .hp(400).attackPower(30).expReward(1000).goldReward(150)
                 .toeicPart(Dungeon.ToeicPart.PART2).difficulty(2).build(),
 
             // 고블린 던전 (PART3)
             Monster.builder().dungeon(d3).name("고블린").monsterType(Monster.MonsterType.NORMAL)
-                .hp(350).attackPower(20).expReward(175).goldReward(20)
+                .hp(150).attackPower(20).expReward(175).goldReward(20)
                 .toeicPart(Dungeon.ToeicPart.PART3).difficulty(2).build(),
             Monster.builder().dungeon(d3).name("스켈레톤").monsterType(Monster.MonsterType.NORMAL)
-                .hp(350).attackPower(25).expReward(175).goldReward(22)
+                .hp(150).attackPower(25).expReward(175).goldReward(22)
                 .toeicPart(Dungeon.ToeicPart.PART3).difficulty(2).build(),
             Monster.builder().dungeon(d3).name("다크 나이트").monsterType(Monster.MonsterType.BOSS)
-                .hp(1200).attackPower(45).expReward(1200).goldReward(200)
+                .hp(500).attackPower(45).expReward(1200).goldReward(200)
                 .toeicPart(Dungeon.ToeicPart.PART3).difficulty(3).build(),
 
             // 사막 요새 (PART4)
             Monster.builder().dungeon(d4).name("오크").monsterType(Monster.MonsterType.NORMAL)
-                .hp(500).attackPower(35).expReward(250).goldReward(30)
+                .hp(180).attackPower(35).expReward(250).goldReward(30)
                 .toeicPart(Dungeon.ToeicPart.PART4).difficulty(3).build(),
             Monster.builder().dungeon(d4).name("사막 군주").monsterType(Monster.MonsterType.BOSS)
-                .hp(1400).attackPower(55).expReward(1400).goldReward(250)
+                .hp(600).attackPower(55).expReward(1400).goldReward(250)
                 .toeicPart(Dungeon.ToeicPart.PART4).difficulty(4).build(),
 
             // 오크 요새 (PART5)
             Monster.builder().dungeon(d5).name("트롤").monsterType(Monster.MonsterType.NORMAL)
-                .hp(600).attackPower(45).expReward(300).goldReward(38)
+                .hp(200).attackPower(45).expReward(300).goldReward(38)
                 .toeicPart(Dungeon.ToeicPart.PART5).difficulty(4).build(),
             Monster.builder().dungeon(d5).name("오크 워로드").monsterType(Monster.MonsterType.BOSS)
-                .hp(1500).attackPower(65).expReward(1500).goldReward(280)
+                .hp(700).attackPower(65).expReward(1500).goldReward(280)
                 .toeicPart(Dungeon.ToeicPart.PART5).difficulty(5).build(),
 
             // 드래곤 성 (PART6)
             Monster.builder().dungeon(d6).name("와이번").monsterType(Monster.MonsterType.NORMAL)
-                .hp(750).attackPower(55).expReward(375).goldReward(48)
+                .hp(220).attackPower(55).expReward(375).goldReward(48)
                 .toeicPart(Dungeon.ToeicPart.PART6).difficulty(5).build(),
             Monster.builder().dungeon(d6).name("드래곤").monsterType(Monster.MonsterType.BOSS)
-                .hp(2000).attackPower(80).expReward(2000).goldReward(300)
+                .hp(800).attackPower(80).expReward(2000).goldReward(300)
                 .toeicPart(Dungeon.ToeicPart.PART6).difficulty(6).build()
         ));
     }

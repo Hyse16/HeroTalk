@@ -104,12 +104,21 @@ public class BattleService {
         String feedbackGood = null, feedbackBad = null, sampleAnswer = null;
 
         if (action == BattleTurn.TurnAction.ATTACK || action == BattleTurn.TurnAction.HINT) {
-            GeminiService.GeminiScoreResult gemini =
-                    geminiService.score(currentQuestion.getQuestionText(), request.getTranscript());
-            score = gemini.score();
-            feedbackGood = gemini.feedbackGood();
-            feedbackBad = gemini.feedbackBad();
-            sampleAnswer = gemini.sampleAnswer();
+            String transcript = request.getTranscript();
+            if (transcript == null || transcript.isBlank()) {
+                // 빈 답변 → 채점 스킵, 0점 처리
+                score = 0;
+                feedbackGood = null;
+                feedbackBad = "답변을 말하지 않았습니다.";
+                sampleAnswer = null;
+            } else {
+                GeminiService.GeminiScoreResult gemini =
+                        geminiService.score(currentQuestion.getQuestionText(), transcript);
+                score = gemini.score();
+                feedbackGood = gemini.feedbackGood();
+                feedbackBad = gemini.feedbackBad();
+                sampleAnswer = gemini.sampleAnswer();
+            }
         } else {
             score = 0;  // PASS, FLEE
         }
