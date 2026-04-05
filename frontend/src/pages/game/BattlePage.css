@@ -273,6 +273,39 @@
   border-left: 2px solid #475569;
 }
 
+.battle-feedback-sample-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.battle-tts-btn {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.battle-tts-btn:hover {
+  background: rgba(245, 158, 11, 0.35);
+}
+
+.battle-tts-btn.playing {
+  background: rgba(245, 158, 11, 0.4);
+  border-color: #f59e0b;
+  animation: tts-pulse 1s ease-in-out infinite;
+}
+
+@keyframes tts-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 .battle-result-overlay {
   position: fixed;
   inset: 0;
@@ -281,6 +314,12 @@
   align-items: center;
   justify-content: center;
   z-index: 200;
+  animation: result-fadein 0.4s ease-out;
+}
+
+@keyframes result-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .battle-result-panel {
@@ -290,6 +329,12 @@
   padding: 40px 60px;
   text-align: center;
   min-width: 360px;
+  animation: result-panel-up 0.4s ease-out;
+}
+
+@keyframes result-panel-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 .battle-result-title {

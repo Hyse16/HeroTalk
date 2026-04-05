@@ -20,3 +20,8 @@ body {
   from { box-shadow: 0 0 8px rgba(124,58,237,0.5); }
   to   { box-shadow: 0 0 18px rgba(124,58,237,0.9), 0 0 30px rgba(124,58,237,0.3); }
 }
+
+@keyframes gamepage-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

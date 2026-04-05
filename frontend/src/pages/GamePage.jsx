@@ -6,6 +6,8 @@ import EventBus from '@/game/EventBus'
 import useAuthStore from '@/store/authStore'
 import useCharacterStore from '@/store/characterStore'
 import { getCharacter } from '@/api/characterApi'
+import { renderCharacter3DToCanvas } from '@/utils/renderCharacter3D'
+import { setCharacterCanvas, getCharacterCanvas } from '@/utils/characterCanvasCache'
 import { checkIn as streakCheckIn, getStreak } from '@/api/streakApi'
 import DungeonSelectModal from './game/DungeonSelectModal'
 import StatAllocateModal from './game/StatAllocateModal'
@@ -31,8 +33,11 @@ const BTN = {
   },
 }
 
+// 모듈 레벨 — StrictMode 이중 실행에도 Phaser가 한 번만 생성/파괴되도록 보장
+let _phaserGame  = null
+let _destroyTimer = null   // StrictMode cleanup → 즉시 destroy 대신 지연 후 destroy
+
 function GamePage() {
-  const gameRef      = useRef(null)
   const containerRef = useRef(null)
   const charRef      = useRef(null)
   const navigate     = useNavigate()
@@ -49,49 +54,63 @@ function GamePage() {
   const [showQuestModal,   setShowQuestModal]   = useState(false)
   const [streak,           setStreak]           = useState(null)
 
-  // 캐릭터 로드 + 스트릭 체크인
   useEffect(() => {
+    let cancelled = false
+
+    // StrictMode cleanup이 예약한 destroy가 있으면 취소 (재마운트이므로 파괴 불필요)
+    clearTimeout(_destroyTimer)
+    _destroyTimer = null
+
+    const dungeonHandler    = () => setShowDungeonModal(true)
+    const sceneReadyHandler = () => {
+      if (charRef.current) {
+        const c = charRef.current
+        EventBus.emit('character-loaded', { job: c.job, gender: c.gender, name: c.name, level: c.level })
+      }
+    }
+    EventBus.on('dungeon-enter', dungeonHandler)
+    EventBus.on('scene-ready',   sceneReadyHandler)
+
+    // Phaser 생성 — 이미 인스턴스가 있으면(StrictMode 재마운트) 재사용
+    if (!_phaserGame && containerRef.current) {
+      _phaserGame = new Phaser.Game({ ...GameConfig, parent: containerRef.current })
+    }
+
+    // 캐릭터 최신 데이터 로드
     getCharacter()
       .then((char) => {
+        if (cancelled) return
         setCharacter(char)
         charRef.current = char
-        EventBus.emit('character-loaded', {
-          job: char.job, gender: char.gender, name: char.name, level: char.level,
-        })
+        setCharacterCanvas(renderCharacter3DToCanvas(char.job, char.gender, 100, 150))
+        EventBus.emit('character-loaded', { job: char.job, gender: char.gender, name: char.name, level: char.level })
       })
-      .catch(() => navigate('/character/create', { replace: true }))
+      .catch((err) => {
+        if (cancelled) return
+        // 404 = 캐릭터 없음 → 생성 페이지로 이동
+        // 그 외 에러(네트워크, 500 등)는 무시 — navigate 호출 안 함 (루프 방지)
+        if (err?.response?.status === 404) {
+          navigate('/character/create', { replace: true })
+        }
+      })
 
     streakCheckIn()
       .then(setStreak)
       .catch(() => getStreak().then(setStreak).catch(() => {}))
-  }, [setCharacter, navigate])
-
-  // Phaser 초기화
-  useEffect(() => {
-    const dungeonHandler = () => setShowDungeonModal(true)
-    EventBus.on('dungeon-enter', dungeonHandler)
-
-    const sceneReadyHandler = () => {
-      if (charRef.current) {
-        const c = charRef.current
-        EventBus.emit('character-loaded', {
-          job: c.job, gender: c.gender, name: c.name, level: c.level,
-        })
-      }
-    }
-    EventBus.on('scene-ready', sceneReadyHandler)
-
-    if (!gameRef.current) {
-      gameRef.current = new Phaser.Game({ ...GameConfig, parent: containerRef.current })
-    }
 
     return () => {
+      cancelled = true
       EventBus.off('dungeon-enter', dungeonHandler)
-      EventBus.off('scene-ready', sceneReadyHandler)
-      gameRef.current?.destroy(true)
-      gameRef.current = null
+      EventBus.off('scene-ready',   sceneReadyHandler)
+      // setTimeout(0): StrictMode 이중 실행 시 바로 뒤 effect가 취소함 → 파괴 안 됨
+      // 진짜 언마운트(페이지 이탈) 시에는 다음 effect 없으므로 정상 파괴됨
+      _destroyTimer = setTimeout(() => {
+        _destroyTimer = null
+        _phaserGame?.destroy(true)
+        _phaserGame = null
+      }, 0)
     }
-  }, [])
+  }, [setCharacter, navigate])
 
   const handleLogout = () => { logout(); navigate('/login') }
 
@@ -173,25 +192,12 @@ function GamePage() {
         />
       )}
 
-      {showShopModal && (
-        <ShopModal onClose={() => setShowShopModal(false)} />
-      )}
+      {showShopModal    && <ShopModal    onClose={() => setShowShopModal(false)} />}
+      {showReviewModal  && <ReviewModal  onClose={() => setShowReviewModal(false)} />}
+      {showRankingModal && <RankingModal onClose={() => setShowRankingModal(false)} />}
+      {showQuestModal   && <QuestModal   onClose={() => setShowQuestModal(false)} />}
 
-      {showReviewModal && (
-        <ReviewModal onClose={() => setShowReviewModal(false)} />
-      )}
-
-      {showRankingModal && (
-        <RankingModal onClose={() => setShowRankingModal(false)} />
-      )}
-
-      {showQuestModal && (
-        <QuestModal onClose={() => setShowQuestModal(false)} />
-      )}
-
-      {showTutorial && (
-        <TutorialOverlay onClose={() => setShowTutorial(false)} />
-      )}
+      {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} />}
     </div>
   )
 }

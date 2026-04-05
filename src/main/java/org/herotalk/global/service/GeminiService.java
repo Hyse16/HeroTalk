@@ -24,7 +24,7 @@ public class GeminiService {
     private final ObjectMapper objectMapper;
 
     private static final String GEMINI_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=%s";
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=%s";
 
     public GeminiScoreResult score(String questionText, String transcript) {
         String prompt = buildPrompt(questionText, transcript);
@@ -35,7 +35,8 @@ public class GeminiService {
                 ),
                 "generationConfig", Map.of(
                         "temperature", 0.3,
-                        "maxOutputTokens", 512
+                        "maxOutputTokens", 1024,
+                        "thinkingConfig", Map.of("thinkingBudget", 0)  // thinking 비활성화
                 )
         );
 

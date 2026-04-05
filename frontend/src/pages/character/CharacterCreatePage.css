@@ -281,3 +281,16 @@
 .cc-avatar svg {
   display: block;
 }
+
+.cc-fade-out {
+  position: fixed;
+  inset: 0;
+  background: #0d0d1a;
+  z-index: 9999;
+  animation: cc-fade 0.5s ease-out forwards;
+}
+
+@keyframes cc-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

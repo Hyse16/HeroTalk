@@ -4,7 +4,7 @@ import TownScene from './scenes/TownScene'
 import BattleScene from './scenes/BattleScene'
 
 const GameConfig = {
-  type: Phaser.AUTO,
+  type: Phaser.CANVAS,
   width: 1280,
   height: 720,
   backgroundColor: '#0d0d1a',

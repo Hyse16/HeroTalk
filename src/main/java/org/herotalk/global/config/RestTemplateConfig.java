@@ -1,20 +1,18 @@
 package org.herotalk.global.config;
 
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
-
-import java.time.Duration;
 
 @Configuration
 public class RestTemplateConfig {
 
     @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder
-                .connectTimeout(Duration.ofSeconds(5))
-                .readTimeout(Duration.ofSeconds(15))  // Gemini 응답 최대 15초 대기
-                .build();
+    public RestTemplate restTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);   // 5초
+        factory.setReadTimeout(15000);     // Gemini 응답 최대 15초 대기
+        return new RestTemplate(factory);
     }
 }

@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import EventBus from '../EventBus'
 import { renderCharacter3DToCanvas } from '../../utils/renderCharacter3D'
+import { getCharacterCanvas, clearCharacterCanvas } from '../../utils/characterCanvasCache'
 
 // ─── [LEGACY] 직업별 캐릭터 그리기 — TownScene은 3D 텍스처로 교체됨 ─────────
 function drawJobCharacter(gfx, job, gender) {
@@ -280,11 +281,20 @@ export default class TownScene extends Phaser.Scene {
   }
 
   _refreshPlayerTexture() {
-    const KEY = 'player-3d'
-    const charCanvas = renderCharacter3DToCanvas(this._job, this._gender, 100, 150)
-    if (this.textures.exists(KEY)) this.textures.remove(KEY)
-    this.textures.addCanvas(KEY, charCanvas)
-    if (this._playerImg) this._playerImg.setTexture(KEY)
+    // GamePage(React)에서 character-loaded 전에 미리 렌더링한 캔버스만 사용
+    // Three.js WebGL은 Phaser 루프 밖에서만 실행 — 여기서는 생성하지 않음
+    const cached = getCharacterCanvas()
+    if (!cached) return
+    clearCharacterCanvas()
+
+    // 더블버퍼: 새 텍스처 먼저 추가 → 이미지 교체 → 구 텍스처 제거 (깜빡임 방지)
+    this._texIdx = ((this._texIdx || 0) + 1) % 2
+    const newKey = `player-3d-${this._texIdx}`
+    const oldKey = `player-3d-${1 - this._texIdx}`
+
+    this.textures.addCanvas(newKey, cached)
+    if (this._playerImg) this._playerImg.setTexture(newKey)
+    if (this.textures.exists(oldKey)) this.textures.remove(oldKey)
   }
 
   // ── 하늘 + 별 + 달 + 산 실루엣 ─────────────────────────────────────────
@@ -436,12 +446,16 @@ export default class TownScene extends Phaser.Scene {
 
   // ── 플레이어 (3D 텍스처) ─────────────────────────────────────────────────
   _createPlayer(W, H, GY) {
-    const KEY = 'player-3d'
-    const charCanvas = renderCharacter3DToCanvas(this._job, this._gender, 100, 150)
+    this._texIdx = 0
+    const KEY = 'player-3d-0'
+    // GamePage에서 Phaser 시작 전 미리 렌더링한 캔버스 사용 (WebGL 충돌 방지)
+    const cached = getCharacterCanvas()
+    const charCanvas = cached || renderCharacter3DToCanvas(this._job, this._gender, 100, 150)
+    clearCharacterCanvas()
     this.textures.addCanvas(KEY, charCanvas)
 
     // origin(0.5, 1) → 발 기준 정렬
-    this._playerImg = this.add.image(0, 0, KEY).setOrigin(0.5, 1).setScale(0.78)
+    this._playerImg = this.add.image(0, 0, 'player-3d-0').setOrigin(0.5, 1).setScale(0.78)
 
     this.player = this.add.container(200, GY - 12, [this._playerImg])
     this.physics.world.enable(this.player)

@@ -1,10 +1,13 @@
 import { useState, useRef, useCallback } from 'react'
 
+const MAX_RECORDING_MS = 60000  // 최대 녹음 1분
+
 const useSpeechRecognition = () => {
   const [transcript, setTranscript] = useState('')
   const [isListening, setIsListening] = useState(false)
   const [error, setError] = useState(null)
   const recognitionRef = useRef(null)
+  const timerRef = useRef(null)
   // ref로 transcript를 동기적으로 보관 — onend 타이밍 race condition 방지
   const transcriptRef = useRef('')
 
@@ -18,20 +21,32 @@ const useSpeechRecognition = () => {
     const recognition = new SpeechRecognition()
 
     recognition.lang = 'en-US'
-    recognition.continuous = false
-    recognition.interimResults = false
+    recognition.continuous = true      // 말하는 동안 계속 인식
+    recognition.interimResults = false // 확정된 결과만 누적
 
     recognition.onstart = () => {
-      transcriptRef.current = ''   // 동기 초기화
+      transcriptRef.current = ''
       setTranscript('')
       setIsListening(true)
       setError(null)
+
+      // 60초 후 자동 종료
+      timerRef.current = setTimeout(() => {
+        recognition.stop()
+      }, MAX_RECORDING_MS)
     }
 
     recognition.onresult = (event) => {
-      const result = event.results[0][0].transcript
-      transcriptRef.current = result  // 동기 저장 — onend보다 먼저 확정됨
-      setTranscript(result)
+      // continuous=true: 여러 결과를 누적
+      let full = ''
+      for (let i = 0; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          full += event.results[i][0].transcript + ' '
+        }
+      }
+      const trimmed = full.trim()
+      transcriptRef.current = trimmed
+      setTranscript(trimmed)
     }
 
     recognition.onerror = (event) => {
@@ -42,7 +57,8 @@ const useSpeechRecognition = () => {
     }
 
     recognition.onend = () => {
-      setIsListening(false)  // 여기서만 false로 변경 — stopListening은 stop()만 호출
+      clearTimeout(timerRef.current)
+      setIsListening(false)
     }
 
     recognitionRef.current = recognition
@@ -50,8 +66,7 @@ const useSpeechRecognition = () => {
   }, [])
 
   const stopListening = useCallback(() => {
-    // stop()만 호출 → onend가 setIsListening(false) 처리
-    // (직접 setIsListening하면 transcriptRef 업데이트 전에 effect 발동되는 race condition 발생)
+    clearTimeout(timerRef.current)
     recognitionRef.current?.stop()
   }, [])
 

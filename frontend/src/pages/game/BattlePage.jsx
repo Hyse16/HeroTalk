@@ -4,6 +4,8 @@ import { processTurn } from '@/api/battleApi'
 import useSpeechRecognition from '@/hooks/useSpeechRecognition'
 import useCharacterStore from '@/store/characterStore'
 import Character3D from '@/components/Character3D'
+import { renderCharacter3DToCanvas } from '@/utils/renderCharacter3D'
+import { setCharacterCanvas, getCharacterCanvas } from '@/utils/characterCanvasCache'
 import './BattlePage.css'
 
 // ── [REMOVED] Canvas 2D character sprite → Character3D로 교체됨 ─────────────
@@ -138,6 +140,66 @@ function CharacterSprite({ job = 'WARRIOR', gender = 'MALE' }) {
   return <canvas ref={ref} width={120} height={160} />
 }
 
+// 브라우저에서 최적 여성 영어 음성 선택
+function getBestFemaleVoice() {
+  const voices = window.speechSynthesis.getVoices()
+  // 우선순위: Google US English > Samantha(macOS) > Karen > en-US female > en-US
+  const priority = [
+    v => v.name === 'Google US English',
+    v => v.name === 'Samantha',
+    v => v.name === 'Karen',
+    v => v.lang === 'en-US' && v.name.toLowerCase().includes('female'),
+    v => v.lang === 'en-US',
+    v => v.lang.startsWith('en'),
+  ]
+  for (const match of priority) {
+    const found = voices.find(match)
+    if (found) return found
+  }
+  return null
+}
+
+function TtsButton({ text }) {
+  const [playing, setPlaying] = useState(false)
+
+  const handleClick = (e) => {
+    e.stopPropagation()
+    const synth = window.speechSynthesis
+    if (playing || synth.speaking) {
+      synth.cancel()
+      setPlaying(false)
+      return
+    }
+    const utter = new SpeechSynthesisUtterance(text)
+    utter.lang  = 'en-US'
+    utter.rate  = 0.88   // 또박또박
+    utter.pitch = 1.1    // 여성 톤
+    utter.volume = 1.0
+
+    // 음성 로드 후 설정 (비동기 로딩 대응)
+    const setVoice = () => {
+      const voice = getBestFemaleVoice()
+      if (voice) utter.voice = voice
+      utter.onstart = () => setPlaying(true)
+      utter.onend   = () => setPlaying(false)
+      utter.onerror = () => setPlaying(false)
+      synth.speak(utter)
+    }
+
+    if (synth.getVoices().length > 0) {
+      setVoice()
+    } else {
+      synth.onvoiceschanged = () => { synth.onvoiceschanged = null; setVoice() }
+    }
+  }
+
+  return (
+    <button className={`battle-tts-btn${playing ? ' playing' : ''}`} onClick={handleClick} title="모범 답안 듣기">
+      {playing ? '⏹' : '🔊'}
+    </button>
+  )
+}
+
 const MONSTER_EMOJIS = {
   슬라임: '🟢', 고블린: '👺', 스켈레톤: '💀', 오크: '👹',
   트롤: '🧌', 와이번: '🐉',
@@ -218,14 +280,18 @@ export default function BattlePage() {
       }
 
       if (turnResult.battleEnded) {
-        setResult({
-          type: turnResult.result,
-          expGained: turnResult.expGained,
-          goldGained: turnResult.goldGained,
-          leveledUp: turnResult.leveledUp,
-          newLevel: turnResult.newLevel,
-          newStatPoints: turnResult.newStatPoints,
-        })
+        // 채점 피드백을 먼저 보여주고 1.5초 후 결과 패널 표시 (깜빡임 방지)
+        setTimeout(() => {
+          setFeedback(null)
+          setResult({
+            type: turnResult.result,
+            expGained: turnResult.expGained,
+            goldGained: turnResult.goldGained,
+            leveledUp: turnResult.leveledUp,
+            newLevel: turnResult.newLevel,
+            newStatPoints: turnResult.newStatPoints,
+          })
+        }, 1500)
       } else if (turnResult.nextQuestion) {
         setCurrentQuestion(turnResult.nextQuestion)
       }
@@ -287,6 +353,16 @@ export default function BattlePage() {
   const handleFlee = () => {
     if (processing || awaitingSTT) return
     handleTurn('FLEE')
+  }
+
+  // 마을로 돌아가기 — Character3D가 아직 마운트된 상태에서 캔버스를 미리 캐시
+  // (GamePage 마운트 시 이전 WebGL 컨텍스트가 완전히 해제되기 전에 새 컨텍스트를 생성하는
+  //  race condition 방지)
+  const goToTown = () => {
+    if (!getCharacterCanvas()) {
+      setCharacterCanvas(renderCharacter3DToCanvas(charJob, charGender, 100, 150))
+    }
+    navigate('/game', { replace: true })
   }
 
   if (!battle || !monster) return null
@@ -426,7 +502,10 @@ export default function BattlePage() {
               <div className="battle-feedback-bad">💡 {feedback.feedbackBad}</div>
               {feedback.sampleAnswer && (
                 <div className="battle-feedback-sample">
-                  <span style={{ color: '#94a3b8', fontSize: '11px' }}>모범 답안</span>
+                  <div className="battle-feedback-sample-header">
+                    <span style={{ color: '#94a3b8', fontSize: '11px' }}>모범 답안</span>
+                    <TtsButton text={feedback.sampleAnswer} />
+                  </div>
                   <div>"{feedback.sampleAnswer}"</div>
                 </div>
               )}
@@ -459,7 +538,7 @@ export default function BattlePage() {
             </div>
             <button
               className="battle-result-btn"
-              onClick={() => navigate('/game', { replace: true })}
+              onClick={goToTown}
             >
               마을로 돌아가기
             </button>

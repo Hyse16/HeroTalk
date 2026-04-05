@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Character3D from '@/components/Character3D'
 import { getCharacter, createCharacter } from '@/api/characterApi'
+import { renderCharacter3DToCanvas } from '@/utils/renderCharacter3D'
+import { setCharacterCanvas } from '@/utils/characterCanvasCache'
 import './CharacterCreatePage.css'
 
 // 직업 정의 데이터
@@ -52,6 +54,7 @@ export default function CharacterCreatePage() {
   const [gender, setGender] = useState('MALE')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [fading, setFading] = useState(false)
 
   // 마운트 시 기존 캐릭터 확인 (이미 있으면 /game으로)
   useEffect(() => {
@@ -75,10 +78,13 @@ export default function CharacterCreatePage() {
     setError(null)
     try {
       await createCharacter(name.trim(), selectedJob, gender)
-      navigate('/game', { replace: true })
+      // Character3D가 아직 마운트된 상태에서 캔버스 미리 캐시
+      // → GamePage의 TownScene이 올바른 직업/성별로 즉시 렌더링할 수 있도록
+      setCharacterCanvas(renderCharacter3DToCanvas(selectedJob, gender, 100, 150))
+      setFading(true)
+      setTimeout(() => navigate('/game', { replace: true }), 500)
     } catch (err) {
       setError(err.response?.data?.message || '캐릭터 생성에 실패했습니다.')
-    } finally {
       setIsLoading(false)
     }
   }
@@ -91,6 +97,7 @@ export default function CharacterCreatePage() {
 
   return (
     <div className="character-create-page">
+      {fading && <div className="cc-fade-out" />}
       {/* 상단 타이틀 */}
       <div className="cc-header">
         <div className="cc-header-label">HERO TALK</div>

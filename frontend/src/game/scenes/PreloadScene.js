@@ -6,25 +6,8 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   preload() {
-    // 로딩 바 UI
-    const { width, height } = this.cameras.main
-    const bar = this.add.graphics()
-    const bg = this.add.graphics()
-
-    bg.fillStyle(0x222222).fillRect(width / 2 - 200, height / 2 - 15, 400, 30)
-    this.load.on('progress', (value) => {
-      bar.clear()
-      bar.fillStyle(0x4ade80).fillRect(width / 2 - 198, height / 2 - 13, 396 * value, 26)
-    })
-
-    this.add
-      .text(width / 2, height / 2 - 40, 'HeroTalk 로딩 중...', {
-        fontSize: '20px',
-        fill: '#ffffff',
-      })
-      .setOrigin(0.5)
-
-    // TODO: 실제 에셋 preload 추가
+    // 현재 로드할 에셋 없음 — 로딩바 표시 안 함 (빈 프레임 플리커 방지)
+    // TODO: 실제 에셋 추가 시 여기에 this.load.image() 등 추가
   }
 
   create() {
