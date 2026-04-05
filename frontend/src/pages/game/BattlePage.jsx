@@ -241,6 +241,7 @@ export default function BattlePage() {
   const [retryConfirm, setRetryConfirm] = useState(false)  // "한번 더 녹음?" 다이얼로그
   const [hintUsed, setHintUsed] = useState(false)   // 힌트 본 상태 → 다음 공격에 -20% 적용
   const [monsterShake, setMonsterShake] = useState(false)
+  const [fleeConfirm, setFleeConfirm] = useState(false)
 
   // transcriptRef는 훅 내부에서 동기적으로 관리 (race condition 제거)
   const { transcript, transcriptRef, isListening, startListening, stopListening } = useSpeechRecognition()
@@ -352,6 +353,11 @@ export default function BattlePage() {
 
   const handleFlee = () => {
     if (processing || awaitingSTT) return
+    setFleeConfirm(true)
+  }
+
+  const handleFleeConfirm = () => {
+    setFleeConfirm(false)
     handleTurn('FLEE')
   }
 
@@ -476,13 +482,39 @@ export default function BattlePage() {
           <button
             className="battle-action-btn flee"
             onClick={handleFlee}
-            disabled={processing || awaitingSTT || retryConfirm || !!result}
+            disabled={processing || awaitingSTT || retryConfirm || fleeConfirm || !!result}
           >
             🏃 도망
             <span className="battle-action-sub">하루 3회</span>
           </button>
         </div>
       </div>
+
+      {/* 도망 확인 다이얼로그 */}
+      {fleeConfirm && (
+        <div className="battle-feedback" onClick={() => setFleeConfirm(false)}>
+          <div className="battle-feedback-score" style={{ fontSize: '20px' }}>🏃 정말 도망가시겠습니까?</div>
+          <div style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '14px' }}>
+            경험치·골드를 얻을 수 없습니다 (하루 3회 제한)
+          </div>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button
+              className="battle-retry-btn no"
+              style={{ padding: '8px 20px', fontSize: '14px' }}
+              onClick={(e) => { e.stopPropagation(); handleFleeConfirm() }}
+            >
+              🏃 도망가기
+            </button>
+            <button
+              className="battle-retry-btn yes"
+              style={{ padding: '8px 20px', fontSize: '14px' }}
+              onClick={(e) => { e.stopPropagation(); setFleeConfirm(false) }}
+            >
+              ⚔️ 계속 싸우기
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Turn feedback overlay */}
       {feedback && (
