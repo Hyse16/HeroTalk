@@ -265,6 +265,10 @@
   outline: none;
   transition: all 0.2s;
 }
+.tv-input[type="email"],
+.tv-input[type="password"] {
+  font-family: monospace;
+}
 .tv-input::placeholder { color: #3e2c10; }
 .tv-input:focus {
   border-color: #6a4a1e;
