@@ -242,6 +242,7 @@ export default function BattlePage() {
   const [hintUsed, setHintUsed] = useState(false)   // 힌트 본 상태 → 다음 공격에 -20% 적용
   const [monsterShake, setMonsterShake] = useState(false)
   const [fleeConfirm, setFleeConfirm] = useState(false)
+  const [fleeInitiated, setFleeInitiated] = useState(false)  // 확인 후 재시도 방지
 
   // transcriptRef는 훅 내부에서 동기적으로 관리 (race condition 제거)
   const { transcript, transcriptRef, isListening, startListening, stopListening } = useSpeechRecognition()
@@ -281,18 +282,26 @@ export default function BattlePage() {
       }
 
       if (turnResult.battleEnded) {
-        // 채점 피드백을 먼저 보여주고 1.5초 후 결과 패널 표시 (깜빡임 방지)
-        setTimeout(() => {
-          setFeedback(null)
-          setResult({
-            type: turnResult.result,
-            expGained: turnResult.expGained,
-            goldGained: turnResult.goldGained,
-            leveledUp: turnResult.leveledUp,
-            newLevel: turnResult.newLevel,
-            newStatPoints: turnResult.newStatPoints,
-          })
-        }, 1500)
+        if (action === 'FLEE') {
+          // 도망: 결과 화면 없이 바로 마을로 이동
+          if (!getCharacterCanvas()) {
+            setCharacterCanvas(renderCharacter3DToCanvas(charJob, charGender, 100, 150))
+          }
+          navigate('/game', { replace: true })
+        } else {
+          // 승리/패배: 채점 피드백 보여주고 1.5초 후 결과 패널 표시
+          setTimeout(() => {
+            setFeedback(null)
+            setResult({
+              type: turnResult.result,
+              expGained: turnResult.expGained,
+              goldGained: turnResult.goldGained,
+              leveledUp: turnResult.leveledUp,
+              newLevel: turnResult.newLevel,
+              newStatPoints: turnResult.newStatPoints,
+            })
+          }, 1500)
+        }
       } else if (turnResult.nextQuestion) {
         setCurrentQuestion(turnResult.nextQuestion)
       }
@@ -302,7 +311,7 @@ export default function BattlePage() {
       setProcessing(false)
       setAwaitingSTT(false)
     }
-  }, [battle])
+  }, [battle, charJob, charGender, navigate])
 
   // 녹음 종료 시 → 즉시 제출 대신 재시도 다이얼로그 표시
   useEffect(() => {
@@ -358,6 +367,7 @@ export default function BattlePage() {
 
   const handleFleeConfirm = () => {
     setFleeConfirm(false)
+    setFleeInitiated(true)
     handleTurn('FLEE')
   }
 
@@ -482,7 +492,7 @@ export default function BattlePage() {
           <button
             className="battle-action-btn flee"
             onClick={handleFlee}
-            disabled={processing || awaitingSTT || retryConfirm || fleeConfirm || !!result}
+            disabled={processing || awaitingSTT || retryConfirm || fleeConfirm || fleeInitiated || !!result}
           >
             🏃 도망
             <span className="battle-action-sub">하루 3회</span>

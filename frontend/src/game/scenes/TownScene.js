@@ -254,8 +254,8 @@ export default class TownScene extends Phaser.Scene {
   create() {
     const W = this.scale.width
     const H = this.scale.height
-    const GY = H * 0.64  // 지면 y
-    this._GY = GY        // update()에서 사용하기 위해 저장
+    const GY = H * 0.64  // 지면 y (석재 길 상단 기준)
+    this._GY = GY - 12   // 캐릭터 발 기준 지면 (석재 길 표면)
 
     this._drawSky(W, H)
     this._drawGround(W, H, GY)
@@ -454,16 +454,20 @@ export default class TownScene extends Phaser.Scene {
     clearCharacterCanvas()
     this.textures.addCanvas(KEY, charCanvas)
 
-    // origin(0.5, 1) → 발 기준 정렬
-    this._playerImg = this.add.image(0, 0, 'player-3d-0').setOrigin(0.5, 1).setScale(0.78)
+    // origin(0.5, 0.707) → 발 기준 정렬 (3D 캔버스에서 발이 캔버스 하단에서 30% 위에 위치)
+    this._playerImg = this.add.image(0, 0, 'player-3d-0').setOrigin(0.5, 0.707).setScale(0.78)
 
-    this.player = this.add.container(200, GY - 12, [this._playerImg])
+    const groundY = GY - 12  // NPC·건물과 동일한 지면 표면 y
+    this.player = this.add.container(200, groundY, [this._playerImg])
     this.physics.world.enable(this.player)
     this.player.body.setSize(28, 62)
     this.player.body.setOffset(-14, -60)
     this.player.body.setCollideWorldBounds(true)
 
-    this.playerLabel = this.add.text(200, GY - 90, `${this._name}  Lv.${this._level}`, {
+    // 점프 기준 y — create()에서 고정, _createHints에서 덮어쓰지 않음
+    this._groundY = groundY
+
+    this.playerLabel = this.add.text(200, groundY - 80, `${this._name}  Lv.${this._level}`, {
       fontSize: '12px', color: '#ffffff', fontFamily: 'monospace',
       stroke: '#000', strokeThickness: 2,
     }).setOrigin(0.5)
@@ -495,7 +499,7 @@ export default class TownScene extends Phaser.Scene {
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
     this.npcDialogShown = false
     this._isJumping = false
-    this._groundY = null
+    // _groundY는 _createPlayer에서 이미 설정됨 — 여기서 null로 덮어쓰지 않음
   }
 
   update() {
@@ -535,7 +539,7 @@ export default class TownScene extends Phaser.Scene {
       if (this.player.y > maxY) this.player.y = maxY
     }
 
-    this.playerLabel.setPosition(this.player.x, this.player.y - 85)
+    this.playerLabel.setPosition(this.player.x, this.player.y - 80)
 
     // 거리 계산
     const dGate = Phaser.Math.Distance.Between(
